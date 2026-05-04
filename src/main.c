@@ -1,32 +1,32 @@
-/*******************************************************************************************
-*
-*   raylib [core] example - 2d camera platformer
-*
-*   Example complexity rating: [★★★☆] 3/4
-*
-*   Example originally created with raylib 2.5, last time updated with raylib 3.0
-*
-*   Example contributed by arvyy (@arvyy) and reviewed by Ramon Santamaria (@raysan5)
-*
-*   Example licensed under an unmodified zlib/libpng license, which is an OSI-certified,
-*   BSD-like license that allows static linking with closed source software
-*
-*   Copyright (c) 2019-2025 arvyy (@arvyy)
-*
-********************************************************************************************/
-
 #include "raylib.h"
 #include "raymath.h"
 
 #include "resource_dir.h"
 
+#define TELA_ALTURA 900
+#define TELA_LARGURA 900
+
+#define COR_PLAYER RED
+#define COR_INIMIGO BLUE
+#define COR_PLATAFORMA GRAY
+#define COR_ESCADA_BAIXO YELLOW
+#define COR_ESCADA_MEIO ORANGE
+#define COR_ESCADA_CIMA GREEN
+#define COR_PORTAL PURPLE
+
+#define MAPA_X 30
+#define MAPA_Y 30
+
 #define G 400
 #define PLAYER_JUMP_SPD 225.0f
 #define PLAYER_HOR_SPD 150.0f
+#define ENEMY_MAX_NUMBER 10
+#define ENEMY_HOR_SPD 100.0f
+
 #define FPS 60
 
 //----------------------------------------------------------------------------------
-// Types and Structures Definition
+// Types e Structs
 //----------------------------------------------------------------------------------
 typedef struct Player {
     Vector2 position;
@@ -34,87 +34,198 @@ typedef struct Player {
     bool canJump;
 } Player;
 
+typedef struct Enemy {
+    Vector2 position;
+    float speed;
+    int direction; // 1 para direita, -1 para esquerda
+} Enemy;
+
+typedef struct Enemies {
+    Enemy enemy[ENEMY_MAX_NUMBER];
+    int quant;
+} Enemies;
+
 typedef struct EnvItem {
-    Rectangle rect;
+    Vector2 position;
     int blocking;
     Color color;
 } EnvItem;
 
+typedef struct EnvItems {
+    EnvItem item[MAPA_X * MAPA_Y];
+    int quant;
+} EnvItems;
+
+typedef struct StairLow {
+    Vector2 position;
+    Color color;
+} StairLow;
+
+typedef struct StairMiddle {
+    Vector2 position;
+    Color color;
+} StairMiddle;
+
+typedef struct StairHigh {
+    Vector2 position;
+    Color color;
+} StairHigh;
+
+typedef struct Stairs {
+    StairLow stairLow[MAPA_X * MAPA_Y];
+    StairMiddle stairMiddle[MAPA_X * MAPA_Y];
+    StairHigh stairHigh[MAPA_X * MAPA_Y];
+    int quantLow;
+    int quantMiddle;
+    int quantHigh;
+} Stairs;
+
+typedef struct Portal {
+    Vector2 position;
+    Color color;
+} Portal;
+
 //----------------------------------------------------------------------------------
-// Module Functions Declaration
+// Declarações implícitas de funções
 //----------------------------------------------------------------------------------
+void LoadFromMap(Player *player, Enemies *enemies, EnvItems *envitems, Stairs *stairs, Portal *portal);
 void UpdatePlayer(Player *player, EnvItem *envItems, int envItemsLength, float delta);
+void UpdateEnemy(Enemy *enemy, EnvItem *envItems, int envItemsLength, float delta);
 
 //------------------------------------------------------------------------------------
-// Program main entry point
+// Função main
 //------------------------------------------------------------------------------------
 int main(void)
 {
-    // Initialization
+    // Variáveis de objetos do jogo
     //--------------------------------------------------------------------------------------
-    const int screenWidth = 900;
-    const int screenHeight = 900;
 
-	// Tell the window to use vsync and work on high DPI displays
+    // Variável para o player no nível
+    // Valores para teste, implementar carregamento a partir do mapa depois
+    Player player = {0};
+
+    // Variável para os inimigos no nível
+    Enemies enemies = {0};
+
+    // Variável para as plataformas do nível
+    // Valores para teste, implementar carregamento a partir do mapa depois
+    EnvItems envItems = {0};
+
+    // Variáveis para as escadas do nível
+    // Valores para teste, implementar carregamento a partir do mapa depois
+    Stairs stairs = {0};
+
+    // Variável para os portais do nível
+    Portal portal = {0};
+
+    // Função para carregar as posições do player, inimigos, itens do ambiente e escadas a partir do mapa
+    LoadFromMap(&player, &enemies, &envItems, &stairs, &portal);
+
+    //--------------------------------------------------------------------------------------
+
+    // Inicialização
+    //--------------------------------------------------------------------------------------
+
+	// Flags para o uso de vsync e dpi alto em telas de alta resolução
 	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 
-	// Utility function from resource_dir.h to find the resources folder and set it as the current working directory so we can load from it
+	// Carregando e setando o diretório de recursos
 	SearchAndSetResourceDir("resources");
 
-	// Load a texture from the resources directory
+	// Carregando a textura do coelho
 	Texture wabbit = LoadTexture("wabbit_alpha.png");
 
-    InitWindow(screenWidth, screenHeight, "Donkey Kong em C com raylib");
+    // Criando a janela
+    InitWindow(TELA_ALTURA, TELA_LARGURA, "Donkey Kong em C com Raylib");
 
-    Player player = { 0 };
-    player.position = (Vector2){ 450, 280 };
-    player.speed = 0;
-    player.canJump = false;
-    EnvItem envItems[] = {
-        {{ 0, 0, 900, 900 }, 0, LIGHTGRAY },
-        {{ 0, 600, 900, 200 }, 1, GRAY },
-        {{ 250,400, 400, 10 }, 1, GRAY },
-        {{ 150, 500, 100, 10 }, 1, GRAY },
-        {{ 650, 500, 100, 10 }, 1, GRAY }
-    };
-
-    int envItemsLength = sizeof(envItems)/sizeof(envItems[0]);
-
+    // Criando a câmera
     Camera2D camera = { 0 };
-    camera.target = player.position;
-    camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
+    camera.target = (Vector2){ TELA_ALTURA / 2.0f, TELA_LARGURA / 2.0f };
+    camera.offset = (Vector2){ TELA_LARGURA/2.0f, TELA_ALTURA/2.0f };
     camera.rotation = 0.0f;
     camera.zoom = 1.0f;
 
+    // Setando o FPS
     SetTargetFPS(FPS);
+
     //--------------------------------------------------------------------------------------
 
-    // Main game loop
+    // Loop principal
     while (!WindowShouldClose())
     {
         // Update
         //----------------------------------------------------------------------------------
+
+        // Atualizando o player
         float deltaTime = GetFrameTime();
+        UpdatePlayer(&player, envItems.item, envItems.quant, deltaTime);
 
-        UpdatePlayer(&player, envItems, envItemsLength, deltaTime);
+        // Atualizando os inimigos
+        for (int i = 0; i < enemies.quant; i++)
+        {
+            Enemy *e = enemies.enemy + i;
+            
+            // Atualizando a posição do inimigo
+            UpdateEnemy(e, envItems.item, envItems.quant, deltaTime);
+        }
 
+        // Resetando a posição do player se R for pressionado
+        // Para testes, remover depois
         if (IsKeyPressed(KEY_R))
+        {
             player.position = (Vector2){ 450, 280 };
+        }
 
-        // Draw
+        // Desenhando o frame
         //----------------------------------------------------------------------------------
         BeginDrawing();
 
+            // Limpando o fundo e setando para a cor LIGHTGRAY
             ClearBackground(LIGHTGRAY);
 
             BeginMode2D(camera);
 
-                for (int i = 0; i < envItemsLength; i++) DrawRectangleRec(envItems[i].rect, envItems[i].color);
+                // Desenhando as escadas
+                for (int i = 0; i < stairs.quantLow; i++)
+                {
+                    DrawRectangleRec((Rectangle){ stairs.stairLow[i].position.x - 10, stairs.stairLow[i].position.y - 10, 40.0f, 40.0f }, 
+                                     stairs.stairLow[i].color);
+                }
+                for (int i = 0; i < stairs.quantMiddle; i++)
+                {
+                    DrawRectangleRec((Rectangle){ stairs.stairMiddle[i].position.x - 10, stairs.stairMiddle[i].position.y - 10, 40.0f, 40.0f }, 
+                                     stairs.stairMiddle[i].color);
+                }
+                for (int i = 0; i < stairs.quantHigh; i++)
+                {
+                    DrawRectangleRec((Rectangle){ stairs.stairHigh[i].position.x - 10, stairs.stairHigh[i].position.y - 10, 40.0f, 40.0f }, 
+                                     stairs.stairHigh[i].color);
+                }
+                
+                // Desenhando o portal
+                DrawRectangleRec((Rectangle){ portal.position.x - 10, portal.position.y - 10, 40.0f, 40.0f }, 
+                                     portal.color);
 
+
+                // Desenhando as plataformas do ambiente
+                for (int i = 0; i < envItems.quant; i++)
+                {
+                    DrawRectangleRec((Rectangle){ envItems.item[i].position.x - 10, envItems.item[i].position.y, 40.0f, 40.0f }, 
+                                     envItems.item[i].color);
+                }
+
+                // Desenhando o player
                 Rectangle playerRect = { player.position.x - 20, player.position.y - 40, 40.0f, 40.0f };
-                DrawRectangleRec(playerRect, RED);
-
+                DrawRectangleRec(playerRect, COR_PLAYER);
                 DrawCircleV(player.position, 5.0f, GOLD);
+
+                // Desenhando os inimigos
+                for (int i = 0; i < enemies.quant; i++)
+                {
+                    Rectangle enemyRect = { enemies.enemy[i].position.x - 20, enemies.enemy[i].position.y - 40, 40.0f, 40.0f };
+                    DrawRectangleRec(enemyRect, COR_INIMIGO);
+                    DrawCircleV(enemies.enemy[i].position, 5.0f, DARKBLUE);
+                }
 
             EndMode2D();
 
@@ -127,21 +238,121 @@ int main(void)
         //----------------------------------------------------------------------------------
     }
 
-    // De-Initialization
+    // Encerramento da janela
     //--------------------------------------------------------------------------------------
-    CloseWindow();        // Close window and OpenGL context
+    CloseWindow();
     //--------------------------------------------------------------------------------------
 
     return 0;
 }
 
-/**
- * Update the player position and speed based on input, gravity and collisions with the environment
- */
+void LoadFromMap(Player *player, Enemies *enemies, EnvItems *envitems, Stairs *stairs, Portal *portal)
+{
+    // Carregar mapa
+    char mapa[MAPA_X][MAPA_Y] = {
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {'F', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'D', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'E'},
+        {'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z'},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'H', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'H', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'H', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'H', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'H', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'H', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'H', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'H', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'H', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', ' ', ' ', ' ', ' ', 'P', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'S', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z', 'Z'},
+    };
+
+    for (int i = 0; i < MAPA_X; i++)
+    {
+        for (int j = 0; j < MAPA_Y; j++)
+        {
+            char c = mapa[i][j];
+
+            switch (c)
+            {
+                case 'P':
+                    // Posição inicial do player
+                    player->position = (Vector2){ j * 30 + 10, i * 30  + 10};
+                    player->speed = PLAYER_HOR_SPD;
+                    player->canJump = false;
+                    break;
+                case 'E':
+                    // Posição inicial de um inimigo
+                    enemies->enemy[enemies->quant].position = (Vector2){ j * 30 + 10, i * 30  + 10};
+                    enemies->enemy[enemies->quant].speed = ENEMY_HOR_SPD;
+                    enemies->enemy[enemies->quant].direction = 1;
+                    enemies->quant++;
+                    break;
+                case 'Z':
+                    // Plataforma
+                    envitems->item[envitems->quant].position = (Vector2){ j * 30 + 10, i * 30  + 10};
+                    envitems->item[envitems->quant].blocking = true;
+                    envitems->item[envitems->quant].color = COR_PLATAFORMA;
+                    envitems->quant++;
+                    break;
+                case 'S':
+                    // Escada (baixo para cima)
+                    stairs->stairLow[stairs->quantLow].position = (Vector2){ j * 30 + 10, i * 30  + 10};
+                    stairs->stairLow[stairs->quantLow].color = COR_ESCADA_BAIXO;
+                    stairs->quantLow++;
+                    break;
+                case 'D':
+                    stairs->stairHigh[stairs->quantHigh].position = (Vector2){ j * 30 + 10, i * 30  + 10};
+                    stairs->stairHigh[stairs->quantHigh].color = COR_ESCADA_CIMA;
+                    stairs->quantHigh++;
+                    break;
+                case 'F':
+                    // Portal para o próximo nível
+                    portal->position = (Vector2){ j * 30 + 10, i * 30  + 10};
+                    portal->color = COR_PORTAL;
+                    break;
+                case 'H':
+                    // Meio da escada (somente visual)
+                    stairs->stairMiddle[stairs->quantMiddle].position = (Vector2){ j * 30 + 10, i * 30  + 10};
+                    stairs->stairMiddle[stairs->quantMiddle].color = COR_ESCADA_MEIO;
+                    stairs->quantMiddle++;
+                    break;
+                default:
+                    // Espaço vazio, não precisa fazer nada
+
+                    break;
+            }
+        }
+        
+    }
+    
+}
+
 void UpdatePlayer(Player *player, EnvItem *envItems, int envItemsLength, float delta)
 {
-    if (IsKeyDown(KEY_LEFT)) player->position.x -= PLAYER_HOR_SPD*delta;
-    if (IsKeyDown(KEY_RIGHT)) player->position.x += PLAYER_HOR_SPD*delta;
+    if (IsKeyDown(KEY_LEFT))
+    {
+        player->position.x -= PLAYER_HOR_SPD*delta;
+    }
+    if (IsKeyDown(KEY_RIGHT))
+    {
+        player->position.x += PLAYER_HOR_SPD*delta;
+    }
     if (IsKeyDown(KEY_SPACE) && player->canJump)
     {
         player->speed = -PLAYER_JUMP_SPD;
@@ -154,14 +365,14 @@ void UpdatePlayer(Player *player, EnvItem *envItems, int envItemsLength, float d
         EnvItem *ei = envItems + i;
         Vector2 *p = &(player->position);
         if (ei->blocking &&
-            ei->rect.x <= p->x &&
-            ei->rect.x + ei->rect.width >= p->x &&
-            ei->rect.y >= p->y &&
-            ei->rect.y <= p->y + player->speed*delta)
+            ei->position.x <= p->x &&
+            ei->position.x + 40 >= p->x &&
+            ei->position.y >= p->y&&
+            ei->position.y <= p->y + player->speed*delta)
         {
             hitObstacle = true;
             player->speed = 0.0f;
-            p->y = ei->rect.y;
+            p->y = ei->position.y;
             break;
         }
     }
@@ -173,4 +384,56 @@ void UpdatePlayer(Player *player, EnvItem *envItems, int envItemsLength, float d
         player->canJump = false;
     }
     else player->canJump = true;
+}
+
+void UpdateEnemy(Enemy *enemy, EnvItem *envItems, int envItemsLength, float delta)
+{
+    // Verificando se o inimigo bateu em uma parede e invertendo a direção se necessário
+        if (enemy->direction == 1)
+        {
+            if (enemy->position.x >= TELA_LARGURA - 20)
+            {
+                enemy->direction = -1;
+            }
+        }
+        else if (enemy->direction == -1)
+        {
+            if (enemy->position.x <= 20)
+            {
+                enemy->direction = 1;
+            }
+        }
+
+    if (enemy->direction == 1)
+    {
+        enemy->position.x += ENEMY_HOR_SPD*delta;
+    }
+    else if (enemy->direction == -1)
+    {
+        enemy->position.x -= ENEMY_HOR_SPD*delta;
+    }
+
+    bool hitObstacle = false;
+    for (int i = 0; i < envItemsLength; i++)
+    {
+        EnvItem *ei = envItems + i;
+        Vector2 *e = &(enemy->position);
+        if (ei->blocking &&
+            ei->position.x <= e->x &&
+            ei->position.x + 40 >= e->x &&
+            ei->position.y >= e->y &&
+            ei->position.y <= e->y + enemy->speed*delta)
+        {
+            hitObstacle = true;
+            enemy->speed = 0.0f;
+            e->y = ei->position.y;
+            break;
+        }
+    }
+
+    if (!hitObstacle)
+    {
+        enemy->position.y += enemy->speed*delta;
+        enemy->speed += G*delta;
+    }
 }
