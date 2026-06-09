@@ -94,6 +94,10 @@
     • O jogo deve funcionar corretamente mesmo com modificacoes externas nos arquivos de mapa (leitura dinamica).
 */
 
+//----------------------------------------------------------------------------------
+// Bibliotecas
+//----------------------------------------------------------------------------------
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -101,307 +105,670 @@
 //----------------------------------------------------------------------------------
 // Constantes
 //----------------------------------------------------------------------------------
+
+// Mapa
 #define MAPA_X 30
 #define MAPA_Y 30
 
-#define MAX_NOME_PLACAR 20
+// Score
+#define NOME_PLACAR_MAX 20
 
-#define MAX_INIMIGOS 8
-#define MAX_ITENS 5
+// Player
+#define PLAYER_VELOCIDADE_HORIZONTAL 150.0f
+#define PLAYER_VELOCIDADE_PULO 225.0f
+#define PLAYER_COR RED
 
-#define MAX_PLATAFORMAS MAPA_X * MAPA_Y
-#define MAX_ESCADAS_BAIXO MAPA_X * MAPA_Y
-#define MAX_ESCADAS_MEIO MAPA_Y
-#define MAX_ESCADAS_CIMA MAPA_X * MAPA_Y
+// Inimigos
+#define INIMIGO_MAX 8
+#define INIMIGO_VELOCIDADE_HORIZONTAL 100.0f
+#define INIMIGO_COR BLUE
 
+// Plataformas
+#define PLATAFORMA_MAX MAPA_X * MAPA_Y
+#define PLATAFORMA_ALTURA TELA_ALTURA / MAPA_X
+#define PLATAFORMA_COMPRIMENTO TELA_LARGURA / MAPA_Y
+#define PLATAFORMA_COR GRAY
+
+// Escadas
+#define ESCADA_BAIXO_MAX MAPA_X * 2
+#define ESCADA_BAIXO_COR YELLOW
+
+#define ESCADA_MEIO_MAX MAX_ESCADAS_BAIXO * MAPA_Y
+#define ESCADA_MEIO_COR ORANGE
+
+#define ESCADA_CIMA_MAX MAX_ESCADAS_BAIXO
+#define ESCADA_CIMA_COR GREEN
+
+// Portal
+#define PORTAL_COR PURPLE
+
+// Janela do Jogo
 #define TELA_ALTURA 900
 #define TELA_LARGURA 900
-
-#define ALTURA_PLATAFORMA TELA_ALTURA / MAPA_X
-#define LARGURA_PLATAFORMA TELA_LARGURA / MAPA_Y
-
-#define COR_PLAYER RED
-#define COR_INIMIGO BLUE
-#define COR_PLATAFORMA GRAY
-#define COR_ESCADA_BAIXO YELLOW
-#define COR_ESCADA_MEIO ORANGE
-#define COR_ESCADA_CIMA GREEN
-#define COR_PORTAL PURPLE
-
-
-
-#define GRAVIDADE 400
-#define PLAYER_JUMP_SPD 225.0f
-#define PLAYER_HOR_SPD 150.0f
-#define ENEMY_HOR_SPD 100.0f
-
 #define FPS 60
 
-//----------------------------------------------------------------------------------
-// Enums, Structs e Typedefs
-//----------------------------------------------------------------------------------
+// Simulação de Gravidade para Pulo/Queda
+#define GRAVIDADE 400
 
-// Enum para os estados possíveis do jogo
-typedef enum enum_estado
-{
+//----------------------------------------------------------------------------------
+// Enums
+//----------------------------------------------------------------------------------
+typedef enum enum_estado_jogo {
     MENU,
+    SCORE,
     JOGO,
-    END
-} ESTADO;
+    FIM
+} EstadoJogo;
 
-// Struct obrigatória para o placar
-typedef struct struct_placar
-{
-    char nome[MAX_NOME_PLACAR];
-    int tempo;
-    int score;
-} PLACAR;
+typedef enum enum_estado_jogo_interno {
+    CARREGAMENTO,
+    JOGO,
+    ENCERRAMENTO
+} EstadoJogoInterno;
 
-// Struct para posição de um ojeto ou plataforma na matriz do mapa
-typedef struct struct_posicao
-{
-    int linha;
-    int coluna;
-} POSICAO;
+//----------------------------------------------------------------------------------
+// Structs
+//----------------------------------------------------------------------------------
+typedef struct struct_score {
+    char nome[NOME_PLACAR_MAX];
+    int tempoVivo;
+    int faseCompletada;
+} Score;
 
-// Struct para o jogador, definindo posição, velocidade e se está em pulo
-typedef struct struct_player
-{
-    POSICAO posicao;
-    float velocidade;
+typedef struct struct_posicao {
+    float x;
+    float y;
+} Posicao;
+
+typedef struct struct_player {
+    Score score;
+    Posicao posicao;
+    int isVivo;
+    float velocidadeHorizontal;
+    float velocidadePulo;
     int podePular;
-    int vivo;
     Color cor;
-} PLAYER;
+} Player;
 
-// Struct para os inimigos, definindo posição, velocidade e direção de movimento
 typedef struct struct_inimigo {
-    POSICAO posicao;
-    float velocidade;
-    int direcaoMovimento; // 1 para direita, -1 para esquerda, 0 para parado
+    Posicao posicao;
+    float velocidadeHorizontal;
+    int direcao;
     Color cor;
-} INIMIGO;
+} Inimigo;
 
-// Struct para item
-typedef struct struct_item {
-    POSICAO posicao;
-    int altura;
-    int comprimento;
-    Color cor;
-} ITEM;
+typedef struct struct_inimigos {
+    Inimigo inimigo[INIMIGO_MAX];
+    int quantInimigos;
+} Inimigos;
 
-// Struct para plataforma do mapa
 typedef struct struct_plataforma {
-    POSICAO posicao;
+    Posicao posicao;
     int altura;
     int comprimento;
     Color cor;
-} PLATAFORMA;
+} Plataforma;
 
-// Structs para escada
+typedef struct struct_plataformas {
+    Plataforma plataforma[PLATAFORMA_MAX];
+    int quantPlataformas;
+} Plataformas;
+
 typedef struct struct_escada_baixo {
-    POSICAO posicao;
+    Posicao posicao;
+    EscadaCima *escadaCima;
     Color cor;
-    ESCADA_CIMA *escadaCima; // Ponteiro para a escada de cima correspondente
-} ESCADA_BAIXO;
+} EscadaBaixo;
 
 typedef struct struct_escada_meio {
-    POSICAO posicao;
+    Posicao posicao;
     Color cor;
-} ESCADA_MEIO;
+} EscadaMeio;
 
 typedef struct struct_escada_cima {
-    POSICAO posicao;
+    Posicao posicao;
+    EscadaBaixo *escadaBaixo;
     Color cor;
-    ESCADA_BAIXO *escadaBaixo; // Ponteiro para a escada de baixo correspondente
-} ESCADA_CIMA;
+} EscadaCima;
 
-// Struct para o portal de saída
-typedef struct struct_portal {
-    POSICAO posicao;
-    Color cor;
-} PORTAL;
-
-// Struct para o mapa do jogo
-typedef struct struct_mapa {
-    PLAYER player;
-    INIMIGO inimigos[MAX_INIMIGOS];
-    int quantInimigos;
-    PLATAFORMA plataformas[MAX_PLATAFORMAS];
-    int quantPlataformas;
-    ITEM itens[MAX_ITENS];
-    int quantItens;
-    ESCADA_BAIXO escadasBaixo[MAX_ESCADAS_BAIXO];
+typedef struct struct_escadas {
+    EscadaBaixo escadaBaixo[ESCADA_BAIXO_MAX];
     int quantEscadasBaixo;
-    ESCADA_MEIO escadasMeio[MAX_ESCADAS_MEIO];
+    EscadaMeio escadaMeio[ESCADA_MEIO_MAX];
     int quantEscadasMeio;
-    ESCADA_CIMA escadasCima[MAX_ESCADAS_CIMA];
+    EscadaCima escadaCima[ESCADA_CIMA_MAX];
     int quantEscadasCima;
-    PORTAL portal;
-} MAPA;
+} Escadas;
+
+typedef struct struct_portal {
+    Posicao posicao;
+    Color cor;
+} Portal;
 
 //----------------------------------------------------------------------------------
 // Funções
 //----------------------------------------------------------------------------------
 
-ESTADO LoopMenu(void);
+// Funções para criação padronizada de estruturas
+// Struct devem ser criadas SEMPRE com o uso dessas funções, para evitar erros
+Score GetScorePadrao();
+Posicao GetPosicaoPadrao();
+Player GetPlayerPadrao();
+Inimigo GetInimigoPadrao();
+Inimigos GetInimigosPadrao();
+Plataforma GetPlataformaPadrao();
+Plataformas GetPlataformasPadrao();
+EscadaBaixo GetEscadaBaixoPadrao();
+EscadaMeio GetEscadaMeioPadrao();
+EscadaCima GetEscadaCimaPadrao();
+Escadas GetEscadasPadrao();
+Portal GetPortalPadrao();
 
-MAPA CarregarMapa(int numeroFase);
-ESTADO LoopJogo(void);
+// Funções de lógica do jogo
+// Carregar o mapa, atualizar a posição do jogador, dos inimigos, etc.
+void CarregarMapa(int numeroFase, char mapa[MAPA_X][]);
+void MatrizParaStructs(char mapa[MAPA_X][], Player *player, Inimigos *inimigos, Plataformas *plataformas, Escadas *escadas, Portal *portal);
+void AtualizarPlayer(Player *player, Plataformas *plataformas, float delta);
+void AtualizarInimigos(Inimigos *inimigos, Plataformas *plataformas, float delta);
+
+// Funções para os diferentes loops de tela: Menu, Score e Jogo
+// Quando encerram, retornam o próximo estado a ser desenhado
+EstadoMain LoopMenu();
+EstadoMain LoopScore();
+EstadoMain LoopJogo();
 
 //----------------------------------------------------------------------------------
 // Função Main
 //----------------------------------------------------------------------------------
 int main(void)
 {
-    // Inicialização de variáveis
-    ESTADO estadoJogo = MENU;
+    // Inicializando o estado do jogo
+    EstadoMain estado = MENU;
 
-    while (estadoJogo != END)
+    // Flags para o uso de vsync e dpi alto em telas de alta resolução
+	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
+
+    // Criando a janela
+    InitWindow(TELA_ALTURA, TELA_LARGURA, "Donkey Kong em C com Raylib");
+
+    // Setando o FPS
+    SetTargetFPS(FPS);
+
+    // Loop da janela do Raylib, só termina ao encerrar o jogo
+    while (!WindowShouldClose())
     {
-        switch (estadoJogo)
+        switch(estado)
         {
-        case MENU:
-            // Loop do menu principal, onde o jogador pode escolher iniciar um novo jogo, ver o ranking ou sair
-            // Tudo o que involver o menu principal fica aqui
-            estadoJogo = LoopMenu();
-            break;
-        case JOGO:
-            // Loop do jogo, onde a lógica principal do jogo é executada
-            // Tudo o que envolver o jogo em si fica aqui
-            estadoJogo = LoopJogo();
-            break;
-        default:
-            break;
+            case MENU:
+                // Jogo no menu, pode ir para score, jogo ou fim
+                estadoMain = LoopMenu();
+            case SCORE:
+                // Jogo no score, pode voltar ao menu
+                estadoMain = LoopScore();
+                break;
+            case JOGO:
+                // Jogo rodando, pode voltar ao menu ou ir para o fim
+                estadoMain = LoopJogo();
+                break;
+            case FIM:
+                // Fim do jogo, encerrar loop e janela
+                CloseWindow();
+                break;
         }
     }
-
-    // Encerramento do jogo
 
     return 0;
 }
 
-MAPA CarregarMapa(int numeroFase)
+//----------------------------------------------------------------------------------
+// Definições de Funções
+//----------------------------------------------------------------------------------
+
+Score GetScorePadrao()
 {
-    // Variáveis para iteração em loops
-    int i, j;
-    char c;
+    Score scorePadrao = {
+        {"Mario"},
+        0,
+        -1
+    };
 
-    // Matriz para armazenar o mapa lido do arquivo
-    char matrizMapa[MAPA_X][MAPA_Y];
+    return scorePadrao;
+}
+Posicao GetPosicaoPadrao()
+{
+    Posicao posicaoPadrao = {
+        0.0,
+        0.0
+    };
 
-    // Variável para armazenar o mapa após processamento da matriz
-    MAPA mapa = {0};
+    return posicaoPadrao;
+}
+Player GetPlayerPadrao()
+{
+    Player playerPadrao = {
+        GetScorePadrao(),
+        GetPosicaoPadrao(),
+        1,
+        PLAYER_VELOCIDADE_HORIZONTAL,
+        PLAYER_VELOCIDADE_PULO,
+        1,
+        PLAYER_COR
+    };
 
-    // Ponteiro para o arquivo do mapa a ser lido
-    FILE *arquivoMapa;
+    return playerPadrao;
+}
+Inimigo GetInimigoPadrao()
+{
+    Inimigo inimigoPadrao = {
+        GetPosicaoPadrao(),
+        INIMIGO_VELOCIDADE_HORIZONTAL,
+        1,
+        INIMIGO_COR
+    };
 
-    // Definindo nome do arquivo a ser carregado, seguindo o formato "mapaX.txt", onde X é o número da fase
-    char nomeInicio[] = "mapa";
-    char nomeFim[] = ".txt";
-    char nomeArquivo[256];
-    snprintf(nomeArquivo, sizeof(nomeArquivo), "%s%d%s", nomeInicio, numeroFase, nomeFim);
+    return inimigoPadrao;
+}
+Inimigos GetInimigosPadrao()
+{
+    Inimigos inimigosPadrao = {0};
 
-    // Abrindo o arquivo do mapa para leitura
-    arquivoMapa = fopen(nomeArquivo, "r");
-
-    // Preenchendo a matriz com todos os caracteres do arquivo, ignorando quebras de linha e caracteres nulos
-    for(i = 0; i < MAPA_X; i++)
+    for(int i = 0; i < INIMIGO_MAX; i++)
     {
-        for(j = 0; j < MAPA_Y; j++)
-        {
-            c = getc(arquivoMapa);
-            switch (c)
-            {
-                case '\n':
-                    j--;
-                    break;
-                case '\0':
-                case EOF:
-                    matrizMapa[i][j] = ' ';
-                    break;
-                default:
-                    matrizMapa[i][j] = c;
-            }
-        }
+        inimigosPadrao.inimigo[i] = GetInimigoPadrao();
     }
 
-    // Fechando o arquivo após a leitura
-    fclose(arquivoMapa);
+    inimigosPadrao.quantInimigos = 0;
 
-    // Processando a matriz para preencher as estruturas do mapa
-    for(i = 0; i < MAPA_X; i++)
+    return inimigosPadrao;
+}
+Plataforma GetPlataformaPadrao()
+{
+    Plataforma plataformaPadrao = {
+        getPosicaoPadrao(),
+        PLATAFORMA_ALTURA,
+        PLATAFORMA_COMPRIMENTO,
+        PLATAFORMA_COR
+    };
+
+    return plataformaPadrao;
+}
+Plataformas GetPlataformasPadrao()
+{
+    Plataformas plataformasPadrao = {0};
+
+    for(int i = 0; i < PLATAFORMA_MAX; i++)
     {
-        for(j = 0; j < MAPA_Y; j++)
-        {
-            switch (matrizMapa[j][i])
-            {
-                case 'P':
-                    // Processar posição do jogador
-                    mapa.player.posicao.linha = j;
-                    mapa.player.posicao.coluna = i;
-                    mapa.player.velocidade = PLAYER_HOR_SPD;
-                    mapa.player.podePular = 1;
-                    mapa.player.vivo = 1;
-                    mapa.player.cor = COR_PLAYER;
-                    break;
-                case 'E':
-                    // Processar posição do inimigo
-                    mapa.inimigos[mapa.quantInimigos].posicao.linha = j;
-                    mapa.inimigos[mapa.quantInimigos].posicao.coluna = i;
-                    mapa.inimigos[mapa.quantInimigos].velocidade = ENEMY_HOR_SPD;
-                    mapa.inimigos[mapa.quantInimigos].direcaoMovimento = 1; // Iniciando movimento para a direita
-                    mapa.inimigos[mapa.quantInimigos].cor = COR_INIMIGO;
-                    mapa.quantInimigos++;
-                    break;
-                case 'Z':
-                    // Processar posição da plataforma
-                    mapa.plataformas[mapa.quantPlataformas].posicao.linha = j;
-                    mapa.plataformas[mapa.quantPlataformas].posicao.coluna = i;
-                    mapa.plataformas[mapa.quantPlataformas].altura = ALTURA_PLATAFORMA;
-                    mapa.plataformas[mapa.quantPlataformas].comprimento = LARGURA_PLATAFORMA;
-                    mapa.plataformas[mapa.quantPlataformas].cor = COR_PLATAFORMA;
-                    mapa.quantPlataformas++;
-                    break;
-                case 'S':
-                    // Processar posição da escada de baixo
-                    mapa.escadasBaixo[mapa.quantEscadasBaixo].posicao.linha = j;
-                    mapa.escadasBaixo[mapa.quantEscadasBaixo].posicao.coluna = i;
-                    mapa.escadasBaixo[mapa.quantEscadasBaixo].cor = COR_ESCADA_BAIXO;
-                    mapa.quantEscadasBaixo++;
-                    break;
-                case 'D':
-                    // Processar posição da escada de cima
-                    mapa.escadasCima[mapa.quantEscadasCima].posicao.linha = j;
-                    mapa.escadasCima[mapa.quantEscadasCima].posicao.coluna = i;
-                    mapa.escadasCima[mapa.quantEscadasCima].cor = COR_ESCADA_CIMA;
-                    mapa.quantEscadasCima++;
-                    break;
-                case 'F':
-                    // Processar posição do portal de saída
-                    mapa.portal.posicao.linha = j;
-                    mapa.portal.posicao.coluna = i;
-                    mapa.portal.cor = COR_PORTAL;
-                    break;
-                case 'H':
-                    // Processar posição da escada do meio
-                    mapa.escadasMeio[mapa.quantEscadasMeio].posicao.linha = j;
-                    mapa.escadasMeio[mapa.quantEscadasMeio].posicao.coluna = i;
-                    mapa.escadasMeio[mapa.quantEscadasMeio].cor = COR_ESCADA_MEIO;
-                    mapa.quantEscadasMeio++;
-                    break;
-                default:
-                    // Ignorar caracteres desconhecidos
-                    break;
-            }
-        }
+        plataformasPadrao.plataforma[i] = GetPlataformaPadrao();
     }
 
-    // Retorno do mapa carregado
-    return mapa;
+    plataformasPadrao.quantPlataformas = 0;
+
+    return plataformasPadrao;
+}
+EscadaBaixo GetEscadaBaixoPadrao()
+{
+    EscadaBaixo escadaBaixoPadrao = {
+        GetPosicaoPadrao(),
+        NULL,
+        ESCADA_BAIXO_COR
+    };
+
+    return escadaBaixoPadrao;
+}
+EscadaMeio GetEscadaMeioPadrao()
+{
+    EscadaMeio escadaMeioPadrao = {
+        GetPosicaoPadrao(),
+        ESCADA_MEIO_COR
+    };
+
+    return escadaMeioPadrao;
+}
+EscadaCima GetEscadaCimaPadrao()
+{
+    EscadaCima escadaCimaPadrao = {
+        GetPosicaoPadrao(),
+        NULL,
+        ESCADA_CIMA_COR
+    };
+
+    return escadaCimaPadrao;
+}
+Escadas GetEscadasPadrao()
+{
+    Escadas escadasPadrao = {0};
+
+    for(int i = 0; i < ESCADA_BAIXO_MAX; i++)
+    {
+        escadasPadrao.escadaBaixo[i] = GetEscadaBaixoPadrao();
+    }
+
+    for(int i = 0; i < ESCADA_MEIO_MAX; i++)
+    {
+        escadasPadrao.escadaMeio[i] = GetEscadaMeioPadrao();
+    }
+
+    for(int i = 0; i < ESCADA_CIMA_MAX; i++)
+    {
+        escadasPadrao.escadaCima[i] = GetEscadaCimaPadrao();
+    }
+
+    escadasPadrao.quantEscadasBaixo = 0;
+    escadasPadrao.quantEscadasMeio = 0;
+    escadasPadrao.quantEscadasCima = 0;
+
+    return escadasPadrao;
+}
+Portal GetPortalPadrao()
+{
+    Portal portalPadrao = {
+        GetPosicaoPadrao(),
+        PORTAL_COR
+    };
+
+    return portalPadrao;
 }
 
-ESTADO LoopJogo(void)
+void CarregarMapa(int numeroFase, char mapa[MAPA_X][])
 {
 
+}
+void MatrizParaStructs(char mapa[MAPA_X][], Player *player, Inimigos *inimigos, Plataformas *plataformas, Escadas *escadas, Portal *portal)
+{
+
+}
+void AtualizarPlayer(Player *player, Plataformas *plataformas, float delta)
+{
+
+}
+void AtualizarInimigos(Inimigos *inimigos, Plataformas *plataformas, float delta)
+{
+
+}
+
+EstadoMain LoopMenu()
+{
+    // Maquina de estado do jogo, define o que o programa vai fazer após este loop encerrar
+    EstadoMain estado;
+
+    int opcaoSelecionada = 0;   // 0=Iniciar, 1=Scores, 2=Fim
+    int loopMenu = 1;
+
+    while(loopMenu)
+    {
+        // Navegação por teclas
+        if (IsKeyPressed(KEY_DOWN))
+            opcaoSelecionada = (opcaoSelecionada + 1) % 3;
+        if (IsKeyPressed(KEY_UP))
+            opcaoSelecionada = (opcaoSelecionada == 0) ? 2 : opcaoSelecionada - 1;
+
+        // Navegação pelo mouse
+        Vector2 mouse = GetMousePosition();
+        Rectangle retIniciar = { largura/2 - 100, 200, 200, 40 };
+        Rectangle retScores  = { largura/2 - 100, 260, 200, 40 };
+        Rectangle retSair    = { largura/2 - 100, 320, 200, 40 };
+
+        // Seleção pelo mouse
+        if (CheckCollisionPointRec(mouse, retIniciar))
+        {
+            opcaoSelecionada = 0;
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            {
+                estadoMain = JOGO;   //Muda para o jogo
+                loopMenu = 0;
+            }
+        } 
+        else if (CheckCollisionPointRec(mouse, retScores))
+        {
+            opcaoSelecionada = 1;
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            {
+                estadoMain = SCORE; //Muda para scores
+                loopMenu = 0;
+            }
+        }
+        else if (CheckCollisionPointRec(mouse, retSair))
+        {
+            opcaoSelecionada = 2;
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            {
+                estadoMain = FIM;   // Sai do programa
+                loopMenu = 0;
+            }
+        }
+
+        // Seleção com enter
+        if (IsKeyPressed(KEY_ENTER)) {
+            if (opcaoSelecionada == 0)
+            {
+                estadoMain = JOGO;
+                loopMenu = 0;
+            }
+            else if (opcaoSelecionada == 1)
+            {
+                estadoMain = SCORE;
+                loopMenu = 0;
+            }
+            else if (opcaoSelecionada == 2)
+            {
+                estadoMain = FIM;
+                loopMenu = 0;
+            }
+        }
+
+        // ----- Desenho do menu -----
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+
+        DrawText("MENU PRINCIPAL", largura/2 - MeasureText("MENU PRINCIPAL", 30)/2, 80, 30, DARKGRAY);
+
+        Color corIniciar = (opcaoSelecionada == 0) ? RED : DARKGRAY;
+        Color corScores  = (opcaoSelecionada == 1) ? RED : DARKGRAY;
+        Color corSair    = (opcaoSelecionada == 2) ? RED : DARKGRAY;
+
+        DrawText("Iniciar Jogo", retIniciar.x + 10, retIniciar.y + 10, 20, corIniciar);
+        DrawText("Scores",       retScores.x + 50,  retScores.y + 10,  20, corScores);
+        DrawText("Sair",         retSair.x + 70,    retSair.y + 10,    20, corSair);
+
+        DrawRectangleLinesEx(retIniciar, 1, DARKGRAY);
+        DrawRectangleLinesEx(retScores, 1, DARKGRAY);
+        DrawRectangleLinesEx(retSair, 1, DARKGRAY);
+        EndDrawing();
+    }
+
+    return estado;
+}
+EstadoMain LoopScore()
+{
+    EstadoMain estado;
+
+
+
+    return estado;
+}
+EstadoMain LoopJogo()
+{
+    // Maquina de estado do jogo, define o que o programa vai fazer após este loop encerrar
+    EstadoMain estado;
+
+    // Maquina de estado interna, para carregamento, execução e encerramento do jogo em momentos distintos
+    EstadoJogoInterno estadoInterno = CARREGAMENTO;
+
+    // Inicialização das structs
+    Player player = GetPlayerPadrao();
+    Inimigos inimigos = GetInimigosPadrao();
+    Plataformas plataformas = GetPlataformasPadrao();
+    Escadas escadas = GetEscadasPadrao();
+    Portal portal = GetPortalPadrao();
+
+    // Info do mapa atual
+    int mapaAtual = 0;
+    char mapa[MAPA_X][MAPA_Y];
+
+    int loopJogo = 1;
+    int isPausado = 0;
+    int opcaoPause = 0;
+
+    float timerNivel = 0.0;
+
+    while(loopJogo)
+    {
+        switch(estadoInterno)
+        {
+            case CARREGAMENTO:
+                // Carregar o mapa atual para a matriz
+                CarregarMapa(mapaAtual, mapa);
+                // Interpretar a matriz para as structs
+                MatrizParaStructs(mapa, &player, &inimigos, &plataformas, &escadas, &portal);
+                timerNivel = 0.0;
+                estadoInterno = JOGO;
+                break;
+            case JOGO:
+                // Simular o jogo com as structs
+
+                // Tempo atual da fase
+                float deltaTime = GetFrameTime();
+
+                // Detecção de input
+                if (IsKeyPressed(KEY_ESCAPE))
+                {
+                    isPausado = !isPausado;
+                    opcaoPause = 0; // reseta seleção ao abrir o menu
+                }
+
+                // Atualizando a posição do player e dos inimigos se o jogo não estiver pausado
+                if(!isPausado)
+                {
+                    timerNivel += deltaTime;
+                    AtualizarPlayer(&player, &plataformas, deltaTime);
+                    AtualizarInimigos(&inimigos, &plataformas, deltaTime);
+                }
+                else
+                {
+                    // ----- Atualização do menu de pausa -----
+                    // Navegação por teclado
+                    if (IsKeyPressed(KEY_DOWN))
+                    {
+                        opcaoPause = (opcaoPause + 1) % 3;
+                    }
+
+                    if (IsKeyPressed(KEY_UP))
+                    {
+                        opcaoPause = (opcaoPause == 0) ? 2 : opcaoPause - 1;
+                    }
+
+                    // Confirmação com Enter
+                    if (IsKeyPressed(KEY_ENTER))
+                    {
+                        if (opcaoPause == 0)            // Continuar
+                        {          
+                            isPausado = 0;
+                        }
+                        else if (opcaoPause == 1)       // Menu Principal
+                        {   
+                            estado = MENU;
+                            isPausado = 0;
+                            // Opcional: chame uma função para limpar dados do jogo
+                        }
+                        else if (opcaoPause == 2)       // Sair
+                        {   
+                            estado = FIM;
+                            estadoInterno = ENCERRAMENTO;
+                            isPausado = 0;
+                        }
+                    }
+
+                    // Navegação por mouse
+                    Vector2 mouse = GetMousePosition();
+                    Rectangle retContinuar  = { TELA_LARGURA/2 - 120, TELA_ALTURA/2 - 50, 240, 40 };
+                    Rectangle retMenu       = { TELA_LARGURA/2 - 120, TELA_ALTURA/2 + 10, 240, 40 };
+                    Rectangle retSair       = { TELA_LARGURA/2 - 120, TELA_ALTURA/2 + 70, 240, 40 };
+
+                    if (CheckCollisionPointRec(mouse, retContinuar))
+                    {
+                        opcaoPause = 0;
+                        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                        {
+                            isPausado = 0;
+                        }
+                    }
+                    else if (CheckCollisionPointRec(mouse, retMenu))
+                    {
+                        opcaoPause = 1;
+                        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                        {
+                            estado = MENU;
+                            estadoInterno = ENCERRAMENTO;
+                            isPausado = 0;
+                        }
+                    }
+                    else if (CheckCollisionPointRec(mouse, retSair))
+                    {
+                        opcaoPause = 2;
+                        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                        {
+                            estado = FIM;
+                            estadoInterno = ENCERRAMENTO;
+                            isPausado = 0;
+                        }
+                    }
+                }
+
+                // Desenhando o Frame
+                BeginDrawing();
+                    // Colorindo o Fundo
+                    ClearBackground(LIGHTGRAY);
+
+                    
+
+                    // Desenhando as escadas
+
+                    // Desenhando o portal
+
+                    // Desenhando as Plataformas
+
+                    // Desenhando os inimigos
+
+                    // Desenhando o player
+
+                    // Desenhando o timer
+                    int minutos = (int)(timerNivel / 60);
+                    int segundos = (int)(timerNivel) % 60;
+                    int centesimos = (int)((timerNivel - (int)timerNivel) * 100);
+                    DrawText(TextFormat("Tempo: %02d:%02d:%02d", minutos, segundos, centesimos),
+                            10, 10, 30, WHITE);
+
+                    // Desenhando o menu de pausa e a sua lógica, se isPausado == 1
+                    if (jogoPausado) {
+                        // Fundo semi-transparente escurecendo a tela
+                        DrawRectangle(0, 0, TELA_LARGURA, TELA_ALTURA, Fade(BLACK, 0.6f));
+
+                        // Título
+                        DrawText("PAUSA", TELA_LARGURA/2 - MeasureText("PAUSA", 50)/2, TELA_ALTURA/4, 50, WHITE);
+
+                        // Opções
+                        Color corContinuar = (opcaoPause == 0) ? RED : LIGHTGRAY;
+                        Color corMenu      = (opcaoPause == 1) ? RED : LIGHTGRAY;
+                        Color corSair      = (opcaoPause == 2) ? RED : LIGHTGRAY;
+
+                        DrawText("Continuar",       retContinuar.x + 30, retContinuar.y + 8, 25, corContinuar);
+                        DrawText("Menu Principal",  retMenu.x + 10,      retMenu.y + 8,      25, corMenu);
+                        DrawText("Sair",            retSair.x + 80,      retSair.y + 8,      25, corSair);
+
+                        // (Opcional) contorno dos retângulos para debug visual
+                        DrawRectangleLinesEx(retContinuar, 1, DARKGRAY);
+                        DrawRectangleLinesEx(retMenu, 1, DARKGRAY);
+                        DrawRectangleLinesEx(retSair, 1, DARKGRAY);
+                    }
+
+                EndDrawing();
+                break;
+            case ENCERRAMENTO:
+                loopJogo = 0;
+                break;
+        }
+    }
+
+
+    return estado;
 }
