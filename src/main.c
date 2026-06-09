@@ -26,47 +26,85 @@
 #define FPS 60
 
 //----------------------------------------------------------------------------------
-// Types e Structs
+// Enums
 //----------------------------------------------------------------------------------
-typedef struct Player {
+typedef enum enum_estado_main
+{
+    MENU,
+    SCORE,
+    JOGO,
+    FIM
+} EstadoMain;
+
+typedef enum enum_estado_jogo
+{
+    INICIALIZANDO,
+    RODANDO,
+    PAUSADO,
+    VITORIA,
+    DERROTA
+} EstadoJogo;
+//----------------------------------------------------------------------------------
+// Structs
+//----------------------------------------------------------------------------------
+
+// Struct obrigatória, conforme especificada na documentação do trabalho
+// Guarda o score do jogador
+typedef struct struct_score
+{
+    char nome[20];
+    int tempo;
+} Score;
+
+typedef struct Player
+{
     Vector2 position;
+    int tempoVivo;
+    int isVivo;
     float speed;
     bool canJump;
 } Player;
 
-typedef struct Enemy {
+typedef struct Enemy
+{
     Vector2 position;
     float speed;
     int direction; // 1 para direita, -1 para esquerda
 } Enemy;
 
-typedef struct Enemies {
+typedef struct Enemies
+{
     Enemy enemy[ENEMY_MAX_NUMBER];
     int quant;
 } Enemies;
 
-typedef struct EnvItem {
+typedef struct EnvItem
+{
     Vector2 position;
     int blocking;
     Color color;
 } EnvItem;
 
-typedef struct EnvItems {
+typedef struct EnvItems
+{
     EnvItem item[MAPA_X * MAPA_Y];
     int quant;
 } EnvItems;
 
-typedef struct StairLow {
+typedef struct StairLow
+{
     Vector2 position;
     Color color;
 } StairLow;
 
-typedef struct StairMiddle {
+typedef struct StairMiddle
+{
     Vector2 position;
     Color color;
 } StairMiddle;
 
-typedef struct StairHigh {
+typedef struct StairHigh
+{
     Vector2 position;
     Color color;
 } StairHigh;
@@ -92,13 +130,66 @@ void LoadFromMap(Player *player, Enemies *enemies, EnvItems *envitems, Stairs *s
 void UpdatePlayer(Player *player, EnvItem *envItems, int envItemsLength, float delta);
 void UpdateEnemy(Enemy *enemy, EnvItem *envItems, int envItemsLength, float delta);
 
+EstadoJogo LoopMenu(void);
+EstadoJogo LoopScore(void);
+EstadoJogo LoopJogo(void);
+
 //------------------------------------------------------------------------------------
 // Função main
 //------------------------------------------------------------------------------------
 int main(void)
 {
-    // Variáveis de objetos do jogo
-    //--------------------------------------------------------------------------------------
+    // Inicializando o estado do jogo
+    EstadoMain estadoMain = MENU;
+
+    // Flags para o uso de vsync e dpi alto em telas de alta resolução
+	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
+
+	// Carregando e setando o diretório de recursos
+	SearchAndSetResourceDir("resources");
+
+	// Carregando a textura do coelho
+	Texture wabbit = LoadTexture("wabbit_alpha.png");
+
+    // Criando a janela
+    InitWindow(TELA_ALTURA, TELA_LARGURA, "Donkey Kong em C com Raylib");
+
+    // Setando o FPS
+    SetTargetFPS(FPS);
+
+    while (!WindowShouldClose())
+    {
+        switch(estadoMain)
+        {
+            case MENU:
+                // Jogo no menu, pode ir para score, jogo ou fim
+                estadoMain = LoopMenu();
+                break;
+            case SCORE:
+                // Jogo no score, pode voltar ao menu
+                estadoMain = LoopScore();
+                break;
+            case JOGO:
+                // Jogo rodando, pode voltar ao menu ou ir para o fim
+                estadoMain = LoopJogo();
+                break;
+            case FIM:
+                // Fim do jogo, encerrar loop e janela
+                CloseWindow();
+                break;
+        }
+    }
+
+    return 0;
+}
+
+int mainAntiga(void)
+{
+    // Estado do jogo
+    EstadoJogo estadoJogo = INICIALIZANDO;
+
+    // Estado do main, será enviado como resposta no fim do loop do jogo
+    EstadoMain estadoMain;
 
     // Variável para o player no nível
     // Valores para teste, implementar carregamento a partir do mapa depois
@@ -121,36 +212,44 @@ int main(void)
     // Função para carregar as posições do player, inimigos, itens do ambiente e escadas a partir do mapa
     LoadFromMap(&player, &enemies, &envItems, &stairs, &portal);
 
-    //--------------------------------------------------------------------------------------
-
-    // Inicialização
-    //--------------------------------------------------------------------------------------
-
-	// Flags para o uso de vsync e dpi alto em telas de alta resolução
-	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
-
-	// Carregando e setando o diretório de recursos
-	SearchAndSetResourceDir("resources");
-
-	// Carregando a textura do coelho
-	Texture wabbit = LoadTexture("wabbit_alpha.png");
-
-    // Criando a janela
-    InitWindow(TELA_ALTURA, TELA_LARGURA, "Donkey Kong em C com Raylib");
-
-    // Criando a câmera
-    Camera2D camera = { 0 };
-    camera.target = (Vector2){ TELA_ALTURA / 2.0f, TELA_LARGURA / 2.0f };
-    camera.offset = (Vector2){ TELA_LARGURA/2.0f, TELA_ALTURA/2.0f };
-    camera.rotation = 0.0f;
-    camera.zoom = 1.0f;
-
-    // Setando o FPS
-    SetTargetFPS(FPS);
-
-    //--------------------------------------------------------------------------------------
-
     // Loop principal
+    switch(estadoJogo)
+    {
+        case INICIALIZANDO:
+            // Inicializando o jogo, carrega dados do mapa para variáveis
+            // Muda de estado para RODANDO
+            // Não altera o estado do main
+
+            estadoJogo = RODANDO;
+            break;
+        case RODANDO:
+            // Jogo rodando normalmente, processar input, atualizar e desenhar a tela
+            // Muda de estado para PAUSADO se receber input para tal
+            // Não altera o estado do main
+
+            break;
+        case PAUSADO:
+            // Jogo pausado, processar input para voltar a rodar, ir para o menu principal ou encerrar o jogo
+            // Muda de estado para RODANDO ou FINALIZANDO, dependendo do input recebido
+            // Pode alterar o estado do main para MENU ou FIM, dependendo do input recebido
+
+            break;
+        case VITORIA:
+            // Jogo com vitória, mostrar mensagem e guardar o score
+            // Muda de estado para FINALIZANDO
+            // Altera o estado do main para MENU
+
+            break;
+        case DERROTA:
+            // Jogo com derrota, mostrar mensagem e guardar o score
+            // Muda de estado para FINALIZANDO
+            // Altera o estado do main para FIM
+            
+            break;
+    }
+
+    return estadoMain;
+
     while (!WindowShouldClose())
     {
         // Update
