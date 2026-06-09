@@ -1,8 +1,6 @@
 #include "raylib.h"
 #include "raymath.h"
 
-#include "resource_dir.h"
-
 #define TELA_ALTURA 900
 #define TELA_LARGURA 900
 
@@ -145,20 +143,16 @@ int main(void)
     // Flags para o uso de vsync e dpi alto em telas de alta resolução
 	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 
-	// Carregando e setando o diretório de recursos
-	SearchAndSetResourceDir("resources");
-
-	// Carregando a textura do coelho
-	Texture wabbit = LoadTexture("wabbit_alpha.png");
-
     // Criando a janela
     InitWindow(TELA_ALTURA, TELA_LARGURA, "Donkey Kong em C com Raylib");
 
     // Setando o FPS
     SetTargetFPS(FPS);
 
+    // Loop da janela do Raylib, só termina ao encerrar o jogo
     while (!WindowShouldClose())
     {
+        // Máquina de estado do main
         switch(estadoMain)
         {
             case MENU:
@@ -179,168 +173,6 @@ int main(void)
                 break;
         }
     }
-
-    return 0;
-}
-
-int mainAntiga(void)
-{
-    // Estado do jogo
-    EstadoJogo estadoJogo = INICIALIZANDO;
-
-    // Estado do main, será enviado como resposta no fim do loop do jogo
-    EstadoMain estadoMain;
-
-    // Variável para o player no nível
-    // Valores para teste, implementar carregamento a partir do mapa depois
-    Player player = {0};
-
-    // Variável para os inimigos no nível
-    Enemies enemies = {0};
-
-    // Variável para as plataformas do nível
-    // Valores para teste, implementar carregamento a partir do mapa depois
-    EnvItems envItems = {0};
-
-    // Variáveis para as escadas do nível
-    // Valores para teste, implementar carregamento a partir do mapa depois
-    Stairs stairs = {0};
-
-    // Variável para os portais do nível
-    Portal portal = {0};
-
-    // Função para carregar as posições do player, inimigos, itens do ambiente e escadas a partir do mapa
-    LoadFromMap(&player, &enemies, &envItems, &stairs, &portal);
-
-    // Loop principal
-    switch(estadoJogo)
-    {
-        case INICIALIZANDO:
-            // Inicializando o jogo, carrega dados do mapa para variáveis
-            // Muda de estado para RODANDO
-            // Não altera o estado do main
-
-            estadoJogo = RODANDO;
-            break;
-        case RODANDO:
-            // Jogo rodando normalmente, processar input, atualizar e desenhar a tela
-            // Muda de estado para PAUSADO se receber input para tal
-            // Não altera o estado do main
-
-            break;
-        case PAUSADO:
-            // Jogo pausado, processar input para voltar a rodar, ir para o menu principal ou encerrar o jogo
-            // Muda de estado para RODANDO ou FINALIZANDO, dependendo do input recebido
-            // Pode alterar o estado do main para MENU ou FIM, dependendo do input recebido
-
-            break;
-        case VITORIA:
-            // Jogo com vitória, mostrar mensagem e guardar o score
-            // Muda de estado para FINALIZANDO
-            // Altera o estado do main para MENU
-
-            break;
-        case DERROTA:
-            // Jogo com derrota, mostrar mensagem e guardar o score
-            // Muda de estado para FINALIZANDO
-            // Altera o estado do main para FIM
-            
-            break;
-    }
-
-    return estadoMain;
-
-    while (!WindowShouldClose())
-    {
-        // Update
-        //----------------------------------------------------------------------------------
-
-        // Atualizando o player
-        float deltaTime = GetFrameTime();
-        UpdatePlayer(&player, envItems.item, envItems.quant, deltaTime);
-
-        // Atualizando os inimigos
-        for (int i = 0; i < enemies.quant; i++)
-        {
-            Enemy *e = enemies.enemy + i;
-            
-            // Atualizando a posição do inimigo
-            UpdateEnemy(e, envItems.item, envItems.quant, deltaTime);
-        }
-
-        // Resetando a posição do player se R for pressionado
-        // Para testes, remover depois
-        if (IsKeyPressed(KEY_R))
-        {
-            player.position = (Vector2){ 450, 280 };
-        }
-
-        // Desenhando o frame
-        //----------------------------------------------------------------------------------
-        BeginDrawing();
-
-            // Limpando o fundo e setando para a cor LIGHTGRAY
-            ClearBackground(LIGHTGRAY);
-
-            BeginMode2D(camera);
-
-                // Desenhando as escadas
-                for (int i = 0; i < stairs.quantLow; i++)
-                {
-                    DrawRectangleRec((Rectangle){ stairs.stairLow[i].position.x - 10, stairs.stairLow[i].position.y - 10, 40.0f, 40.0f }, 
-                                     stairs.stairLow[i].color);
-                }
-                for (int i = 0; i < stairs.quantMiddle; i++)
-                {
-                    DrawRectangleRec((Rectangle){ stairs.stairMiddle[i].position.x - 10, stairs.stairMiddle[i].position.y - 10, 40.0f, 40.0f }, 
-                                     stairs.stairMiddle[i].color);
-                }
-                for (int i = 0; i < stairs.quantHigh; i++)
-                {
-                    DrawRectangleRec((Rectangle){ stairs.stairHigh[i].position.x - 10, stairs.stairHigh[i].position.y - 10, 40.0f, 40.0f }, 
-                                     stairs.stairHigh[i].color);
-                }
-                
-                // Desenhando o portal
-                DrawRectangleRec((Rectangle){ portal.position.x - 10, portal.position.y - 10, 40.0f, 40.0f }, 
-                                     portal.color);
-
-
-                // Desenhando as plataformas do ambiente
-                for (int i = 0; i < envItems.quant; i++)
-                {
-                    DrawRectangleRec((Rectangle){ envItems.item[i].position.x - 10, envItems.item[i].position.y, 40.0f, 40.0f }, 
-                                     envItems.item[i].color);
-                }
-
-                // Desenhando o player
-                Rectangle playerRect = { player.position.x - 20, player.position.y - 40, 40.0f, 40.0f };
-                DrawRectangleRec(playerRect, COR_PLAYER);
-                DrawCircleV(player.position, 5.0f, GOLD);
-
-                // Desenhando os inimigos
-                for (int i = 0; i < enemies.quant; i++)
-                {
-                    Rectangle enemyRect = { enemies.enemy[i].position.x - 20, enemies.enemy[i].position.y - 40, 40.0f, 40.0f };
-                    DrawRectangleRec(enemyRect, COR_INIMIGO);
-                    DrawCircleV(enemies.enemy[i].position, 5.0f, DARKBLUE);
-                }
-
-            EndMode2D();
-
-            DrawText("Controls:", 20, 20, 10, BLACK);
-            DrawText("- Right/Left to move", 40, 40, 10, DARKGRAY);
-            DrawText("- Space to jump", 40, 60, 10, DARKGRAY);
-            DrawText("- R to reset position", 40, 100, 10, DARKGRAY);
-
-        EndDrawing();
-        //----------------------------------------------------------------------------------
-    }
-
-    // Encerramento da janela
-    //--------------------------------------------------------------------------------------
-    CloseWindow();
-    //--------------------------------------------------------------------------------------
 
     return 0;
 }
@@ -535,4 +367,253 @@ void UpdateEnemy(Enemy *enemy, EnvItem *envItems, int envItemsLength, float delt
         enemy->position.y += enemy->speed*delta;
         enemy->speed += G*delta;
     }
+}
+
+EstadoJogo LoopMenu(void)
+{
+    EstadoMain estadoMain = MENU;
+    int opcaoSelecionada = 0;   // 0=Iniciar, 1=Scores, 2=Fim
+    int loopMenu = 1;
+
+    while(loopMenu)
+    {
+        // Navegação por teclas
+        if (IsKeyPressed(KEY_DOWN))
+            opcaoSelecionada = (opcaoSelecionada + 1) % 3;
+        if (IsKeyPressed(KEY_UP))
+            opcaoSelecionada = (opcaoSelecionada == 0) ? 2 : opcaoSelecionada - 1;
+
+        // Navegação pelo mouse
+        Vector2 mouse = GetMousePosition();
+        Rectangle retIniciar = { largura/2 - 100, 200, 200, 40 };
+        Rectangle retScores  = { largura/2 - 100, 260, 200, 40 };
+        Rectangle retSair    = { largura/2 - 100, 320, 200, 40 };
+
+        // Seleção pelo mouse
+        if (CheckCollisionPointRec(mouse, retIniciar))
+        {
+            opcaoSelecionada = 0;
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            {
+                estadoMain = JOGO;   //Muda para o jogo
+                loopMenu = 0;
+            }
+        } 
+        else if (CheckCollisionPointRec(mouse, retScores))
+        {
+            opcaoSelecionada = 1;
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            {
+                estadoMain = SCORE; //Muda para scores
+                loopMenu = 0;
+            }
+        }
+        else if (CheckCollisionPointRec(mouse, retSair))
+        {
+            opcaoSelecionada = 2;
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            {
+                estadoMain = FIM;   // Sai do programa
+                loopMenu = 0;
+            }
+        }
+
+        // Seleção com enter
+        if (IsKeyPressed(KEY_ENTER)) {
+            if (opcaoSelecionada == 0)
+            {
+                estadoMain = JOGO;
+                loopMenu = 0;
+            }
+            else if (opcaoSelecionada == 1)
+            {
+                estadoMain = SCORE;
+                loopMenu = 0;
+            }
+            else if (opcaoSelecionada == 2)
+            {
+                estadoMain = FIM;
+                loopMenu = 0;
+            }
+        }
+
+        // ----- Desenho do menu -----
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+
+        DrawText("MENU PRINCIPAL", largura/2 - MeasureText("MENU PRINCIPAL", 30)/2, 80, 30, DARKGRAY);
+
+        Color corIniciar = (opcaoSelecionada == 0) ? RED : DARKGRAY;
+        Color corScores  = (opcaoSelecionada == 1) ? RED : DARKGRAY;
+        Color corSair    = (opcaoSelecionada == 2) ? RED : DARKGRAY;
+
+        DrawText("Iniciar Jogo", retIniciar.x + 10, retIniciar.y + 10, 20, corIniciar);
+        DrawText("Scores",       retScores.x + 50,  retScores.y + 10,  20, corScores);
+        DrawText("Sair",         retSair.x + 70,    retSair.y + 10,    20, corSair);
+
+        DrawRectangleLinesEx(retIniciar, 1, DARKGRAY);
+        DrawRectangleLinesEx(retScores, 1, DARKGRAY);
+        DrawRectangleLinesEx(retSair, 1, DARKGRAY);
+        EndDrawing();
+    }
+
+    return estadoMain;
+}
+
+EstadoJogo LoopScore(void)
+{
+
+}
+
+EstadoJogo LoopJogo(void)
+{
+    // Estado do jogo
+    EstadoJogo estadoJogo = INICIALIZANDO;
+
+    // Estado do main, será enviado como resposta no fim do loop do jogo
+    EstadoMain estadoMain = JOGO;
+
+    // Variável para o player no nível
+    Player player = {0};
+
+    // Variável para os inimigos no nível
+    Enemies enemies = {0};
+
+    // Variável para as plataformas do nível
+    EnvItems envItems = {0};
+
+    // Variáveis para as escadas do nível
+    Stairs stairs = {0};
+
+    // Variável para os portais do nível
+    Portal portal = {0};
+
+    // Função para carregar as posições do player, inimigos, itens do ambiente e escadas a partir do mapa
+    LoadFromMap(&player, &enemies, &envItems, &stairs, &portal);
+
+    // Máquina de estado do jogo
+    switch(estadoJogo)
+    {
+        case INICIALIZANDO:
+            // Inicializando o jogo, carrega dados do mapa para variáveis
+            // Muda de estado para RODANDO
+            // Não altera o estado do main
+
+            // Inicializar variáveis do player, inimigos, itens, escadas e portal
+            // Não esquecer de salvar o tempo de vida do jogador entre inicializações
+
+            estadoJogo = RODANDO;
+            break;
+        case RODANDO:
+            // Jogo rodando normalmente, processar input, atualizar e desenhar a tela
+            // Muda de estado para PAUSADO se receber input para tal
+            // Não altera o estado do main
+
+            float deltaTime = GetFrameTime();
+            UpdatePlayer(&player, envItems.item, envItems.quant, deltaTime);
+
+            // Atualizando os inimigos
+            for (int i = 0; i < enemies.quant; i++)
+            {
+                Enemy *e = enemies.enemy + i;
+                
+                // Atualizando a posição do inimigo
+                UpdateEnemy(e, envItems.item, envItems.quant, deltaTime);
+            }
+
+            // Resetando a posição do player se R for pressionado
+            // Para testes, remover depois
+            if (IsKeyPressed(KEY_R))
+            {
+                player.position = (Vector2){ 450, 280 };
+            }
+
+            if (IsKeyPressed(KEY_P))
+            {
+                estadoJogo = PAUSADO;
+                break;
+            }
+
+            // Desenhando o frame
+            //----------------------------------------------------------------------------------
+            BeginDrawing();
+
+            // Limpando o fundo e setando para a cor LIGHTGRAY
+            ClearBackground(LIGHTGRAY);
+
+            BeginMode2D(camera);
+
+                // Desenhando as escadas
+                for (int i = 0; i < stairs.quantLow; i++)
+                {
+                    DrawRectangleRec((Rectangle){ stairs.stairLow[i].position.x - 10, stairs.stairLow[i].position.y - 10, 40.0f, 40.0f }, 
+                                     stairs.stairLow[i].color);
+                }
+                for (int i = 0; i < stairs.quantMiddle; i++)
+                {
+                    DrawRectangleRec((Rectangle){ stairs.stairMiddle[i].position.x - 10, stairs.stairMiddle[i].position.y - 10, 40.0f, 40.0f }, 
+                                     stairs.stairMiddle[i].color);
+                }
+                for (int i = 0; i < stairs.quantHigh; i++)
+                {
+                    DrawRectangleRec((Rectangle){ stairs.stairHigh[i].position.x - 10, stairs.stairHigh[i].position.y - 10, 40.0f, 40.0f }, 
+                                     stairs.stairHigh[i].color);
+                }
+                
+                // Desenhando o portal
+                DrawRectangleRec((Rectangle){ portal.position.x - 10, portal.position.y - 10, 40.0f, 40.0f }, 
+                                     portal.color);
+
+
+                // Desenhando as plataformas do ambiente
+                for (int i = 0; i < envItems.quant; i++)
+                {
+                    DrawRectangleRec((Rectangle){ envItems.item[i].position.x - 10, envItems.item[i].position.y, 40.0f, 40.0f }, 
+                                     envItems.item[i].color);
+                }
+
+                // Desenhando o player
+                Rectangle playerRect = { player.position.x - 20, player.position.y - 40, 40.0f, 40.0f };
+                DrawRectangleRec(playerRect, COR_PLAYER);
+                DrawCircleV(player.position, 5.0f, GOLD);
+
+                // Desenhando os inimigos
+                for (int i = 0; i < enemies.quant; i++)
+                {
+                    Rectangle enemyRect = { enemies.enemy[i].position.x - 20, enemies.enemy[i].position.y - 40, 40.0f, 40.0f };
+                    DrawRectangleRec(enemyRect, COR_INIMIGO);
+                    DrawCircleV(enemies.enemy[i].position, 5.0f, DARKBLUE);
+                }
+
+            EndMode2D();
+
+            DrawText("Controls:", 20, 20, 10, BLACK);
+            DrawText("- Right/Left to move", 40, 40, 10, DARKGRAY);
+            DrawText("- Space to jump", 40, 60, 10, DARKGRAY);
+            DrawText("- R to reset position", 40, 100, 10, DARKGRAY);
+
+            EndDrawing();
+            break;
+        case PAUSADO:
+            // Jogo pausado, processar input para voltar a rodar, ir para o menu principal ou encerrar o jogo
+            // Muda de estado para RODANDO ou FINALIZANDO, dependendo do input recebido
+            // Pode alterar o estado do main para MENU ou FIM, dependendo do input recebido
+
+            break;
+        case VITORIA:
+            // Jogo com vitória, mostrar mensagem e guardar o score
+            // Muda de estado para FINALIZANDO
+            // Altera o estado do main para MENU
+
+            break;
+        case DERROTA:
+            // Jogo com derrota, mostrar mensagem e guardar o score
+            // Muda de estado para FINALIZANDO
+            // Altera o estado do main para MENU
+
+            break;
+    }
+
+    return estadoMain;
+
 }
