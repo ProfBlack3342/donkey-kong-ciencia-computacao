@@ -112,6 +112,7 @@
 // Mapa
 #define MAPA_X 30
 #define MAPA_Y 30
+#define MAPA_MAX 4
 
 // Score
 #define NOME_PLACAR_MAX 20
@@ -187,7 +188,7 @@ typedef enum enum_estado_jogo_interno {
 //----------------------------------------------------------------------------------
 typedef struct struct_score {
     char nome[NOME_PLACAR_MAX];
-    int tempoVivo;
+    float tempoVivo;
     int faseCompletada;
 } Score;
 
@@ -202,6 +203,7 @@ typedef struct struct_player {
     int isVivo;
     float velocidade;
     int podePular;
+    int concluiuFase;
     float altura;
     float comprimento;
     Color cor;
@@ -303,7 +305,7 @@ void MatrizParaStructs(char mapa[MAPA_X][MAPA_Y], Player *player, Inimigos *inim
 // Funções para lidar com a movimentação e colisão do Player e Inimigos
 // Feitas com a ajuda do DeepSeek, pq meu deus eu odeio física, e a física me odeia
 int PontoSobrePlataforma(float x, float y, Plataformas *plataformas);
-void AtualizarPlayer(Player *player, Plataformas *plataformas, Inimigos *inimigos, float delta);
+void AtualizarPlayer(Player *player, Plataformas *plataformas, Inimigos *inimigos, Escadas *escadas, Portal *portal, float delta);
 void AtualizarInimigos(Inimigos *inimigos, Plataformas *plataformas, float delta);
 
 // Funções para os diferentes loops de tela: Menu, Score e Jogo
@@ -386,6 +388,7 @@ Player GetPlayerPadrao()
         GetPosicaoPadrao(),
         1,
         0.0f,
+        0,
         0,
         PLAYER_ALTURA,
         PLAYER_COMPRIMENTO,
@@ -650,9 +653,9 @@ int PontoSobrePlataforma(float x, float y, Plataformas *plataformas)
     }
     return 0;
 }
-void AtualizarPlayer(Player *player, Plataformas *plataformas, Inimigos *inimigos, float delta)
+void AtualizarPlayer(Player *player, Plataformas *plataformas, Inimigos *inimigos, Escadas *escadas, Portal *portal, float delta)
 {
-    // ========== 1. MOVIMENTAÇÃO HORIZONTAL COM COLISÃO ==========
+    // ========== MOVIMENTAÇÃO HORIZONTAL COM COLISÃO ==========
     float novoX = player->posicao.x;
     if (IsKeyDown(KEY_LEFT))  novoX -= PLAYER_VELOCIDADE_HORIZONTAL * delta;
     if (IsKeyDown(KEY_RIGHT)) novoX += PLAYER_VELOCIDADE_HORIZONTAL * delta;
@@ -678,7 +681,7 @@ void AtualizarPlayer(Player *player, Plataformas *plataformas, Inimigos *inimigo
     }
     if (podeMoverX) player->posicao.x = novoX;
 
-    // ========== 2. VERIFICAÇÃO DE CHÃO PARA PULO ==========
+    // ========== VERIFICAÇÃO DE CHÃO PARA PULO ==========
     // Pontos sob os pés (esquerdo e direito), 1 pixel abaixo da base
     float peEsqX = player->posicao.x + 2.0f;                      // margem para não confundir bordas
     float peDirX = player->posicao.x + player->comprimento - 2.0f;
@@ -692,7 +695,7 @@ void AtualizarPlayer(Player *player, Plataformas *plataformas, Inimigos *inimigo
         player->velocidade = -PLAYER_VELOCIDADE_PULO;
     }
 
-    // ========== 3. FÍSICA VERTICAL (GRAVIDADE + COLISÃO) ==========
+    // ========== FÍSICA VERTICAL (GRAVIDADE + COLISÃO) ==========
     player->velocidade += GRAVIDADE * delta;
     float novoY = player->posicao.y + player->velocidade * delta;
 
@@ -736,19 +739,71 @@ void AtualizarPlayer(Player *player, Plataformas *plataformas, Inimigos *inimigo
     if (!bateu)
         player->posicao.y = novoY;
 
-    // ========== 4. ATUALIZAÇÃO FINAL DO ESTADO DE CHÃO ==========
-    // Recalcula após o movimento para uso externo (ex.: animações, HUD)
+    // ========== ATUALIZAÇÃO FINAL DO ESTADO DE CHÃO ==========
     peEsqX = player->posicao.x + 2.0f;
     peDirX = player->posicao.x + player->comprimento - 2.0f;
     peY    = player->posicao.y + player->altura + 1.0f;
     player->podePular = PontoSobrePlataforma(peEsqX, peY, plataformas) ||
                         PontoSobrePlataforma(peDirX, peY, plataformas);
 
-    // ========== 5. COLISÃO COM INIMIGOS ==========
+    // Retângulo final do jogador (usado por escadas, portal e inimigos)
     Rectangle playerRectFinal = {
         player->posicao.x, player->posicao.y,
         player->comprimento, player->altura
     };
+
+    // ========== INTERAÇÃO COM ESCADAS (TELETRANSPORTE) ==========
+    // Escadas de baixo → subir (KEY_UP)
+    for (int i = 0; i < escadas->quantEscadasBaixo; i++)
+    {
+        EscadaBaixo *eb = &escadas->escadaBaixo[i];
+        Rectangle escadaRect = {
+            eb->posicao.x, eb->posicao.y,
+            eb->comprimento, eb->altura
+        };
+        if (CheckCollisionRecs(playerRectFinal, escadaRect) && IsKeyPressed(KEY_UP))
+        {
+            if (eb->escadaCima != NULL)
+            {
+                player->posicao.x = eb->escadaCima->posicao.x;
+                player->posicao.y = eb->escadaCima->posicao.y - player->altura;
+                player->velocidade = 0.0f;
+            }
+            break;
+        }
+    }
+
+    // Escadas de cima → descer (KEY_DOWN)
+    for (int i = 0; i < escadas->quantEscadasCima; i++)
+    {
+        EscadaCima *ec = &escadas->escadaCima[i];
+        Rectangle escadaRect = {
+            ec->posicao.x, ec->posicao.y,
+            ec->comprimento, ec->altura
+        };
+        if (CheckCollisionRecs(playerRectFinal, escadaRect) && IsKeyPressed(KEY_DOWN))
+        {
+            if (ec->escadaBaixo != NULL)
+            {
+                player->posicao.x = ec->escadaBaixo->posicao.x;
+                player->posicao.y = ec->escadaBaixo->posicao.y - player->altura;
+                player->velocidade = 0.0f;
+            }
+            break;
+        }
+    }
+
+    // ========== INTERAÇÃO COM PORTAL ==========
+    Rectangle portalRect = {
+        portal->posicao.x, portal->posicao.y,
+        portal->comprimento, portal->altura
+    };
+    if (CheckCollisionRecs(playerRectFinal, portalRect))
+    {
+        player->concluiuFase = 1;
+    }
+
+    // ========== COLISÃO COM INIMIGOS ==========
     for (int i = 0; i < inimigos->quantInimigos; i++)
     {
         Inimigo *inim = &inimigos->inimigo[i];
@@ -759,7 +814,7 @@ void AtualizarPlayer(Player *player, Plataformas *plataformas, Inimigos *inimigo
         if (CheckCollisionRecs(playerRectFinal, inimRect))
         {
             player->isVivo = 0;
-            return;  // morte instantânea
+            return;
         }
     }
 }
@@ -865,7 +920,7 @@ void AtualizarInimigos(Inimigos *inimigos, Plataformas *plataformas, float delta
     }
 }
 
-EstadoJogo LoopMenu(void)
+EstadoJogo LoopMenu()
 {
     EstadoJogo estado = MENU;
     int opcaoSelecionada = 0;
@@ -974,7 +1029,7 @@ EstadoJogo LoopScore()
 
     return estado;
 }
-EstadoJogo LoopJogo(void)
+EstadoJogo LoopJogo()
 {
     EstadoJogo estado = MENU; // valor inicial seguro
     EstadoJogoInterno estadoInterno = CARREGAMENTO;
@@ -994,6 +1049,8 @@ EstadoJogo LoopJogo(void)
 
     float timerNivel = 0.0f;
 
+    int playerGanhou = 0;
+
     while (loopJogo)
     {
         if (WindowShouldClose())
@@ -1006,12 +1063,13 @@ EstadoJogo LoopJogo(void)
         switch (estadoInterno)
         {
             case CARREGAMENTO:
+            {
                 CarregarMapa(mapaAtual, mapa);
                 MatrizParaStructs(mapa, &player, &inimigos, &plataformas, &escadas, &portal);
                 timerNivel = 0.0f;
                 estadoInterno = JOGANDO;
                 break;
-
+            }
             case JOGANDO:
             {
                 float deltaTime = GetFrameTime();
@@ -1031,7 +1089,39 @@ EstadoJogo LoopJogo(void)
                 if (!isPausado)
                 {
                     timerNivel += deltaTime;
-                    AtualizarPlayer(&player, &plataformas, &inimigos, deltaTime);
+
+                    AtualizarPlayer(&player, &plataformas, &inimigos, &escadas, &portal, deltaTime);
+                    if (player.concluiuFase)
+                    {
+                        // Salvar tempo e fase no score
+                        player.score.tempoVivo += timerNivel;   // acumula o tempo da fase
+                        player.score.faseCompletada = mapaAtual;
+                        
+                        mapaAtual++;   // avança para a próxima fase
+                        
+                        if(mapaAtual > MAPA_MAX)
+                        {
+                            // Player ganhou, mostrar tela de vitória, score e voltar ao menu
+                            playerGanhou = 1;
+                            estadoInterno = ENCERRAMENTO;
+                        }
+                        else
+                        {
+                            // Reinicia a fase (volta ao estado CARREGAMENTO)
+                            estadoInterno = CARREGAMENTO;
+                            player.velocidade = 0.0f;
+                            player.podePular = 0;
+                            player.isVivo = 1;          // Só pra garantir
+                            player.concluiuFase = 0;
+                        }
+                    }
+                    else if(!(player.isVivo))
+                    {
+                        // Player morreu, mostrar tela de derrota, score e voltar ao menu
+                        playerGanhou = 0;
+                        estadoInterno = ENCERRAMENTO;
+                    }
+
                     AtualizarInimigos(&inimigos, &plataformas, deltaTime);
 
                     // Reset de teste (tecla R)
@@ -1058,13 +1148,13 @@ EstadoJogo LoopJogo(void)
                         else if (opcaoPause == 1)       // Menu Principal
                         {
                             estado = MENU;
-                            estadoInterno = ENCERRAMENTO;
+                            loopJogo = 0;
                             isPausado = 0;
                         }
                         else if (opcaoPause == 2)       // Sair
                         {
                             estado = FIM;
-                            estadoInterno = ENCERRAMENTO;
+                            loopJogo = 0;
                             isPausado = 0;
                         }
                     }
@@ -1083,7 +1173,7 @@ EstadoJogo LoopJogo(void)
                         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
                         {
                             estado = MENU;
-                            estadoInterno = ENCERRAMENTO;
+                            loopJogo = 0;
                             isPausado = 0;
                         }
                     }
@@ -1093,7 +1183,7 @@ EstadoJogo LoopJogo(void)
                         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
                         {
                             estado = FIM;
-                            estadoInterno = ENCERRAMENTO;
+                            loopJogo = 0;
                             isPausado = 0;
                         }
                     }
@@ -1211,12 +1301,131 @@ EstadoJogo LoopJogo(void)
                 }
 
                 EndDrawing();
-            }
-            break;
-
-            case ENCERRAMENTO:
-                loopJogo = 0;
                 break;
+            }
+            case ENCERRAMENTO:
+            {
+                int opcaoFim = 0;
+                int escolhaFeita = 0;
+
+                while (!WindowShouldClose() && !escolhaFeita)
+                {
+                    // ----- Navegação por teclado -----
+                    if (IsKeyPressed(KEY_DOWN))
+                        opcaoFim = (opcaoFim + 1) % 3;
+                    if (IsKeyPressed(KEY_UP))
+                        opcaoFim = (opcaoFim == 0) ? 2 : opcaoFim - 1;
+
+                    // ----- Navegação por mouse -----
+                    Vector2 mouse = GetMousePosition();
+                    Rectangle retJogarNovamente = { TELA_LARGURA/2 - 150, TELA_ALTURA/2 - 40, 300, 45 };
+                    Rectangle retMenuFim        = { TELA_LARGURA/2 - 150, TELA_ALTURA/2 + 20, 300, 45 };
+                    Rectangle retSairFim        = { TELA_LARGURA/2 - 150, TELA_ALTURA/2 + 80, 300, 45 };
+
+                    if (CheckCollisionPointRec(mouse, retJogarNovamente))
+                    {
+                        opcaoFim = 0;
+                        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                            escolhaFeita = 1;
+                    }
+                    else if (CheckCollisionPointRec(mouse, retMenuFim))
+                    {
+                        opcaoFim = 1;
+                        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                            escolhaFeita = 1;
+                    }
+                    else if (CheckCollisionPointRec(mouse, retSairFim))
+                    {
+                        opcaoFim = 2;
+                        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                            escolhaFeita = 1;
+                    }
+
+                    // ----- Confirmação por Enter -----
+                    if (IsKeyPressed(KEY_ENTER))
+                        escolhaFeita = 1;
+
+                    // ----- Desenho da tela de fim -----
+                    BeginDrawing();
+                    ClearBackground(DARKGRAY);
+
+                    if (playerGanhou)
+                    {
+                        DrawText("VOCE VENCEU!", TELA_LARGURA/2 - MeasureText("VOCE VENCEU!", 50)/2,
+                                TELA_ALTURA/4 - 30, 50, GREEN);
+                        DrawText(TextFormat("Tempo total: %.2f segundos", player.score.tempoVivo),
+                                TELA_LARGURA/2 - 150, TELA_ALTURA/4 + 40, 20, LIGHTGRAY);
+                        DrawText(TextFormat("Fase final: %d", player.score.faseCompletada + 1),
+                                TELA_LARGURA/2 - 100, TELA_ALTURA/4 + 70, 20, LIGHTGRAY);
+                                
+                        // Checar os scores, se for maior ou igual ao último seguindo os critérios,
+                        // Perguntar se o usuário deseja salvar seu nome.
+                        // Se o usuário digitar algo e apertar "Salvar", salvar o score no binário,
+                        // lembrando de fazer a organização em ordem decrescente
+                    }
+                    else
+                    {
+                        DrawText("VOCE MORREU!", TELA_LARGURA/2 - MeasureText("VOCE MORREU!", 50)/2,
+                                TELA_ALTURA/4 - 30, 50, RED);
+                        DrawText(TextFormat("Tempo sobrevivido: %.2f segundos", timerNivel),
+                                TELA_LARGURA/2 - 170, TELA_ALTURA/4 + 40, 20, LIGHTGRAY);
+                    }
+
+                    // Opções
+                    Color corJogar = (opcaoFim == 0) ? YELLOW : LIGHTGRAY;
+                    Color corMenu  = (opcaoFim == 1) ? YELLOW : LIGHTGRAY;
+                    Color corSair  = (opcaoFim == 2) ? YELLOW : LIGHTGRAY;
+
+                    DrawText("Jogar Novamente", retJogarNovamente.x + 30, retJogarNovamente.y + 10, 25, corJogar);
+                    DrawText("Menu Principal",  retMenuFim.x + 30,        retMenuFim.y + 10,        25, corMenu);
+                    DrawText("Sair",            retSairFim.x + 100,       retSairFim.y + 10,        25, corSair);
+
+                    // Contornos para debug visual (opcional)
+                    DrawRectangleLinesEx(retJogarNovamente, 1, LIGHTGRAY);
+                    DrawRectangleLinesEx(retMenuFim, 1, LIGHTGRAY);
+                    DrawRectangleLinesEx(retSairFim, 1, LIGHTGRAY);
+
+                    EndDrawing();
+                }
+
+                // ----- Processa a escolha -----
+                if (WindowShouldClose())
+                {
+                    estado = FIM;
+                    loopJogo = 0;
+                }
+                else
+                {
+                    switch (opcaoFim)
+                    {
+                        case 0: // Jogar Novamente
+                            // Reinicializa tudo
+                            player = GetPlayerPadrao();
+                            inimigos = GetInimigosPadrao();
+                            plataformas = GetPlataformasPadrao();
+                            escadas = GetEscadasPadrao();
+                            portal = GetPortalPadrao();
+                            mapaAtual = 0;
+                            timerNivel = 0.0f;
+                            playerGanhou = 0;
+                            estadoInterno = CARREGAMENTO;
+                            loopJogo = 1;          // continua o loop principal do jogo
+                            estado = JOGO;         // permanece no estado JOGO
+                            break;
+
+                        case 1: // Menu Principal
+                            estado = MENU;
+                            loopJogo = 0;          // encerra este loop, main voltará ao menu
+                            break;
+
+                        case 2: // Sair
+                            estado = FIM;
+                            loopJogo = 0;
+                            break;
+                    }
+                }
+                break;
+            }
         }
     }
 
