@@ -2,17 +2,17 @@
 Uma versao simplificada do jogo conhecido como Donkey Kong, codificado e apresentado para o curso de
 Algoritmos e Programação - 2026/1
 
-# Membros do Grupo
+### Membros do Grupo
 - Ariel Nathan Scheffer de Souza
 - Eduardo Pereira Moreira
 
-# Professores e Monitores
+### Professores e Monitores
 - Prof. Dr. Eder John Scheid
 - Profa. Dra. Luciana Bencke
 - Augusto Sturm
 - Melchior Neto
 
-# Como compilar (VSCode)
+## Como compilar (VSCode)
 *Nota* Precisa ter um compilador de C instalado e configurado no VSCode
 
 1. Abrir a pasta do jogo no VSCode
