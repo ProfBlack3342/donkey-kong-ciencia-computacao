@@ -119,47 +119,48 @@
 // Player
 #define PLAYER_VELOCIDADE_HORIZONTAL 150.0f
 #define PLAYER_VELOCIDADE_PULO 225.0f
-#define PLAYER_ALTURA 20
-#define PLAYER_COMPRIMENTO 20
+#define PLAYER_ALTURA 20.0f
+#define PLAYER_COMPRIMENTO 20.0f
 #define PLAYER_COR RED
 
 // Inimigos
 #define INIMIGO_MAX 8
 #define INIMIGO_VELOCIDADE_HORIZONTAL 100.0f
-#define INIMIGO_ALTURA 20
-#define INIMIGO_COMPRIMENTO 20
+#define INIMIGO_ALTURA 20.0f
+#define INIMIGO_COMPRIMENTO 20.0f
 #define INIMIGO_COR BLUE
 
 // Plataformas
 #define PLATAFORMA_MAX MAPA_X * MAPA_Y
-#define PLATAFORMA_ALTURA 30
-#define PLATAFORMA_COMPRIMENTO 30
+#define PLATAFORMA_ALTURA 30.0f
+#define PLATAFORMA_COMPRIMENTO 30.0f
 #define PLATAFORMA_COR GRAY
 
 // Escadas
 #define ESCADA_BAIXO_MAX MAPA_X * 2
 #define ESCADA_BAIXO_COR YELLOW
-#define ESCADA_BAIXO_ALTURA 30
-#define ESCADA_BAIXO_COMPRIMENTO 30
+#define ESCADA_BAIXO_ALTURA 30.0f
+#define ESCADA_BAIXO_COMPRIMENTO 30.0f
 
 #define ESCADA_MEIO_MAX MAX_ESCADAS_BAIXO * MAPA_Y
 #define ESCADA_MEIO_COR ORANGE
-#define ESCADA_MEIO_ALTURA 30
-#define ESCADA_MEIO_COMPRIMENTO 30
+#define ESCADA_MEIO_ALTURA 30.0f
+#define ESCADA_MEIO_COMPRIMENTO 30.0f
 
 #define ESCADA_CIMA_MAX MAX_ESCADAS_BAIXO
 #define ESCADA_CIMA_COR GREEN
-#define ESCADA_CIMA_ALTURA 30
-#define ESCADA_CIMA_COMPRIMENTO 30
+#define ESCADA_CIMA_ALTURA 30.0f
+#define ESCADA_CIMA_COMPRIMENTO 30.0f
 
 // Portal
-#define PORTAL_ALTURA 40
-#define PORTAL_COMPRIMENTO 30
+#define PORTAL_ALTURA 40.0f
+#define PORTAL_COMPRIMENTO 30.0f
 #define PORTAL_COR PURPLE
 
 // Janela do Jogo
-#define TELA_ALTURA MAPA_X * 30
-#define TELA_LARGURA MAPA_Y * 30
+#define MULTIPLICADOR_TELA 30
+#define TELA_ALTURA MAPA_X * MULTIPLICADOR_TELA
+#define TELA_LARGURA MAPA_Y * MULTIPLICADOR_TELA
 #define FPS 60
 
 // Simulação de Gravidade para Pulo/Queda do Player e Inimigos
@@ -201,8 +202,8 @@ typedef struct struct_player {
     int isVivo;
     float velocidade;
     int podePular;
-    int altura;
-    int comprimento;
+    float altura;
+    float comprimento;
     Color cor;
 } Player;
 
@@ -210,8 +211,8 @@ typedef struct struct_inimigo {
     Posicao posicao;
     float velocidade;
     int direcao;
-    int altura;
-    int comprimento;
+    float altura;
+    float comprimento;
     Color cor;
 } Inimigo;
 
@@ -222,8 +223,8 @@ typedef struct struct_inimigos {
 
 typedef struct struct_plataforma {
     Posicao posicao;
-    int altura;
-    int comprimento;
+    float altura;
+    float comprimento;
     Color cor;
 } Plataforma;
 
@@ -235,23 +236,23 @@ typedef struct struct_plataformas {
 typedef struct struct_escada_baixo {
     Posicao posicao;
     EscadaCima *escadaCima;
-    int altura;
-    int comprimento;
+    float altura;
+    float comprimento;
     Color cor;
 } EscadaBaixo;
 
 typedef struct struct_escada_meio {
     Posicao posicao;
-    int altura;
-    int comprimento;
+    float altura;
+    float comprimento;
     Color cor;
 } EscadaMeio;
 
 typedef struct struct_escada_cima {
     Posicao posicao;
     EscadaBaixo *escadaBaixo;
-    int altura;
-    int comprimento;
+    float altura;
+    float comprimento;
     Color cor;
 } EscadaCima;
 
@@ -266,8 +267,8 @@ typedef struct struct_escadas {
 
 typedef struct struct_portal {
     Posicao posicao;
-    int altura;
-    int comprimento;
+    float altura;
+    float comprimento;
     Color cor;
 } Portal;
 
@@ -375,8 +376,8 @@ Player GetPlayerPadrao()
         GetScorePadrao(),
         GetPosicaoPadrao(),
         1,
+        PLAYER_VELOCIDADE_HORIZONTAL,
         0,
-        1,
         PLAYER_ALTURA,
         PLAYER_COMPRIMENTO,
         PLAYER_COR
@@ -388,7 +389,7 @@ Inimigo GetInimigoPadrao()
 {
     Inimigo inimigoPadrao = {
         GetPosicaoPadrao(),
-        0,
+        INIMIGO_VELOCIDADE_HORIZONTAL,
         1,
         INIMIGO_ALTURA,
         INIMIGO_COMPRIMENTO,
@@ -508,11 +509,87 @@ Portal GetPortalPadrao()
 
 void CarregarMapa(int numeroFase, char mapa[MAPA_X][])
 {
+    char nomeMapaInicio[] = "mapa";
+    char nomeMapaFim[] = ".txt";
+    char nomeMapa[10];                  // {'m', 'a', 'p', 'a', 'N', '.', 't', 'x', 't', '\0'}
+    snprintf(nomeMapa, sizeof(nomeMapa), "%s%d%s", nomeMapaInicio, numeroFase, nomeMapaFim);
 
+    char elementoMapa;
+
+    FILE *arquivo;
+    if(!(arquivo =  fopen(nomeMapa, "r")))
+    {
+        // Erro na abertura do arquivo
+    }
+    else
+    {
+        for(int i = 0; i < MAPA_X; i++)
+        {
+            for(int j = 0; j < MAPA_Y; j++)
+            {
+                mapa[i][j] = getc(arquivo);
+            }
+            getc(arquivo);
+        }
+    }
+
+    fclose(arquivo);
 }
 void MatrizParaStructs(char mapa[MAPA_X][], Player *player, Inimigos *inimigos, Plataformas *plataformas, Escadas *escadas, Portal *portal)
 {
-    
+    EscadaBaixo *escadaBaixo;
+    EscadaCima *escadaCima;
+
+    for(int i = 0; i < MAPA_Y; i++)
+    {
+        for(int j = 0; j < MAPA_X; j++)
+        {
+            switch(mapa[j][i])
+            {
+                case 'P':   // Posição do Player
+                    player->posicao.x = (i * MULTIPLICADOR_TELA);
+                    player->posicao.y = (j * MULTIPLICADOR_TELA);
+                    break;
+                case 'E':   // Posição de um Inimigo
+                    inimigos->inimigo[inimigos->quantInimigos].posicao.x = (i * MULTIPLICADOR_TELA);
+                    inimigos->inimigo[inimigos->quantInimigos].posicao.y = (j * MULTIPLICADOR_TELA);
+                    inimigos->quantInimigos++;
+                    break;
+                case 'Z':   // Posição de uma Plataforma
+                    plataformas->plataforma[plataformas->quantPlataformas].posicao.x = (i * MULTIPLICADOR_TELA);
+                    plataformas->plataforma[plataformas->quantPlataformas].posicao.y = (j * MULTIPLICADOR_TELA);
+                    plataformas->quantPlataformas++;
+                    break;
+                case 'S':   // Posição de uma parte de baixo de Escada
+                    escadaBaixo = &(escadas->escadaBaixo[escadas->quantEscadasBaixo]);
+                    escadaBaixo->posicao.x = (i * MULTIPLICADOR_TELA);
+                    escadaBaixo->posicao.y = (j * MULTIPLICADOR_TELA);
+
+                    escadaBaixo->escadaCima = escadaCima;
+                    escadaCima->escadaBaixo = escadaBaixo;
+
+                    escadas->quantEscadasBaixo++;
+                    break;
+                case 'D':   // Posição de uma parte de cima de Escada
+                    escadaCima = &(escadas->escadaCima[escadas->quantEscadasCima]);
+                    escadaCima->posicao.x = (i * MULTIPLICADOR_TELA);
+                    escadaCima->posicao.y = (j * MULTIPLICADOR_TELA);
+                    escadas->quantEscadasCima++;
+                    break;
+                case 'F':   // Posição do Portal de saída da fase
+                    portal->posicao.x = (i * MULTIPLICADOR_TELA);
+                    portal->posicao.y = (j * MULTIPLICADOR_TELA);
+                    break;
+                case 'H':   // Posição de uma parte do meio de Escada
+                    escadas->escadaMeio[escadas->quantEscadasMeio].posicao.x = (i * MULTIPLICADOR_TELA);
+                    escadas->escadaMeio[escadas->quantEscadasMeio].posicao.y = (j * MULTIPLICADOR_TELA);
+                    escadas->quantEscadasMeio++;
+                    break;
+                default:    // Espaço vazio
+
+            }
+        }
+    }
 }
 void AtualizarPlayer(Player *player, Plataformas *plataformas, float delta)
 {
@@ -793,6 +870,13 @@ EstadoMain LoopJogo()
                     timerNivel += deltaTime;
                     AtualizarPlayer(&player, &plataformas, deltaTime);
                     AtualizarInimigos(&inimigos, &plataformas, deltaTime);
+
+                    // Resetando a posição do player se R for pressionado
+                    // Para testes, remover depois
+                    if (IsKeyPressed(KEY_R))
+                    {
+                        player.position = (Vector2){ 450, 280 };
+                    }
                 }
                 else
                 {
@@ -870,17 +954,86 @@ EstadoMain LoopJogo()
                     // Colorindo o Fundo
                     ClearBackground(LIGHTGRAY);
 
-                    
-
                     // Desenhando as escadas
+                    for(int i = 0; i < escadas.quantEscadasBaixo; i++)
+                    {
+                        DrawRectangleRec(
+                            (Rectangle){
+                                escadas.escadaBaixo[i].posicao.x,
+                                escadas.escadaBaixo[i].posicao.y,
+                                escadas.escadaBaixo[i].altura,
+                                escadas.escadaBaixo[i].comprimento
+                            }, 
+                            escadas.escadaBaixo[i].cor);
+                    }
+                    for(int i = 0; i < escadas.quantEscadasMeio; i++)
+                    {
+                        DrawRectangleRec(
+                            (Rectangle){
+                                escadas.escadaMeio[i].posicao.x,
+                                escadas.escadaMeio[i].posicao.y,
+                                escadas.escadaMeio[i].altura,
+                                escadas.escadaMeio[i].comprimento
+                            }, 
+                            escadas.escadaMeio[i].cor);
+                    }
+                    for(int i = 0; i < escadas.quantEscadasCima; i++)
+                    {
+                        DrawRectangleRec(
+                            (Rectangle){
+                                escadas.escadaCima[i].posicao.x,
+                                escadas.escadaCima[i].posicao.y,
+                                escadas.escadaCima[i].altura,
+                                escadas.escadaCima[i].comprimento
+                            }, 
+                            escadas.escadaCima[i].cor);
+                    }
 
                     // Desenhando o portal
+                    DrawRectangleRec(
+                        (Rectangle){
+                            portal.posicao.x,
+                            portal.posicao.y,
+                            portal.altura,
+                            portal.comprimento
+                        }, 
+                        portal.cor);
 
                     // Desenhando as Plataformas
+                    for(int i = 0; i < plataformas.quantPlataformas; i++)
+                    {
+                        DrawRectangleRec(
+                            (Rectangle){
+                                plataformas.plataforma[i].posicao.x,
+                                plataformas.plataforma[i].posicao.y,
+                                plataformas.plataforma[i].altura,
+                                plataformas.plataforma[i].comprimento
+                            }, 
+                            plataformas.plataforma[i].cor);
+                    }
 
                     // Desenhando os inimigos
+                    for(int i = 0; i < inimigos.quantInimigos; i++)
+                    {
+                        DrawRectangleRec(
+                            (Rectangle){
+                                inimigos.inimigo[i].posicao.x,
+                                inimigos.inimigo[i].posicao.y,
+                                inimigos.inimigo[i].altura,
+                                inimigos.inimigo[i].comprimento
+                            }, 
+                            inimigos.inimigo[i].cor);
+                    }
 
                     // Desenhando o player
+                    DrawRectangleRec(
+                        (Rectangle){
+                            player.posicao.x,
+                            player.posicao.y,
+                            player.altura,
+                            player.comprimento
+                        }, 
+                        player.cor);
 
                     // Desenhando o timer
                     int minutos = (int)(timerNivel / 60);
