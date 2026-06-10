@@ -1363,11 +1363,6 @@ EstadoJogo LoopJogo()
                                 TELA_LARGURA/2 - 150, TELA_ALTURA/4 + 40, 20, LIGHTGRAY);
                         DrawText(TextFormat("Fase final: %d", player.score.faseCompletada + 1),
                                 TELA_LARGURA/2 - 100, TELA_ALTURA/4 + 70, 20, LIGHTGRAY);
-
-                        // Checar os scores, se for maior ou igual ao último seguindo os critérios,
-                        // Perguntar se o usuário deseja salvar seu nome.
-                        // Se o usuário digitar algo e apertar "Salvar", salvar o score no binário,
-                        // lembrando de fazer a organização em ordem decrescente
                     }
                     else
                     {
@@ -1376,6 +1371,11 @@ EstadoJogo LoopJogo()
                         DrawText(TextFormat("Tempo sobrevivido: %.2f segundos", timerNivel),
                                 TELA_LARGURA/2 - 170, TELA_ALTURA/4 + 40, 20, LIGHTGRAY);
                     }
+
+                    // Checar os scores, se for maior ou igual ao último seguindo os critérios,
+                    // Perguntar se o usuário deseja salvar seu nome.
+                    // Se o usuário digitar algo e apertar "Salvar", salvar o score no binário,
+                    // lembrando de fazer a organização em ordem decrescente
 
                     // Opções
                     Color corJogar = (opcaoFim == 0) ? YELLOW : LIGHTGRAY;
