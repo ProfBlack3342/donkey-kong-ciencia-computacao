@@ -1280,11 +1280,11 @@ EstadoJogo LoopJogo()
                     }, 
                     player.cor);
 
-                // Desenho do timer
+                // Desenho do timer + fase
                 int minutos = (int)(timerNivel / 60);
                 int segundos = (int)(timerNivel) % 60;
                 int centesimos = (int)((timerNivel - (int)timerNivel) * 100);
-                DrawText(TextFormat("Tempo: %02d:%02d:%02d", minutos, segundos, centesimos),
+                DrawText(TextFormat("Fase: %d\nTempo: %02d:%02d:%02d", mapaAtual, minutos, segundos, centesimos),
                         10, 10, 30, WHITE);
 
                 // Menu de pausa sobreposto
