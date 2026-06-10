@@ -131,23 +131,23 @@
 #define INIMIGO_COR BLUE
 
 // Plataformas
-#define PLATAFORMA_MAX MAPA_X * MAPA_Y
+#define PLATAFORMA_MAX (MAPA_X * MAPA_Y)
 #define PLATAFORMA_ALTURA 30.0f
 #define PLATAFORMA_COMPRIMENTO 30.0f
 #define PLATAFORMA_COR GRAY
 
 // Escadas
-#define ESCADA_BAIXO_MAX MAPA_X * 2
+#define ESCADA_BAIXO_MAX (MAPA_X * 2)
 #define ESCADA_BAIXO_COR YELLOW
 #define ESCADA_BAIXO_ALTURA 30.0f
 #define ESCADA_BAIXO_COMPRIMENTO 30.0f
 
-#define ESCADA_MEIO_MAX MAX_ESCADAS_BAIXO * MAPA_Y
+#define ESCADA_MEIO_MAX (ESCADA_BAIXO_MAX * MAPA_Y)
 #define ESCADA_MEIO_COR ORANGE
 #define ESCADA_MEIO_ALTURA 30.0f
 #define ESCADA_MEIO_COMPRIMENTO 30.0f
 
-#define ESCADA_CIMA_MAX MAX_ESCADAS_BAIXO
+#define ESCADA_CIMA_MAX ESCADA_BAIXO_MAX
 #define ESCADA_CIMA_COR GREEN
 #define ESCADA_CIMA_ALTURA 30.0f
 #define ESCADA_CIMA_COMPRIMENTO 30.0f
@@ -158,13 +158,13 @@
 #define PORTAL_COR PURPLE
 
 // Janela do Jogo
-#define MULTIPLICADOR_TELA 30
-#define TELA_ALTURA MAPA_X * MULTIPLICADOR_TELA
-#define TELA_LARGURA MAPA_Y * MULTIPLICADOR_TELA
+#define MULTIPLICADOR_TELA 30.0f
+#define TELA_LARGURA (MAPA_X * MULTIPLICADOR_TELA)
+#define TELA_ALTURA (MAPA_Y * MULTIPLICADOR_TELA)
 #define FPS 60
 
 // Simulação de Gravidade para Pulo/Queda do Player e Inimigos
-#define GRAVIDADE 400
+#define GRAVIDADE 400.0f
 
 //----------------------------------------------------------------------------------
 // Enums
@@ -178,7 +178,7 @@ typedef enum enum_estado_jogo {
 
 typedef enum enum_estado_jogo_interno {
     CARREGAMENTO,
-    JOGO,
+    JOGANDO,
     ENCERRAMENTO
 } EstadoJogoInterno;
 
@@ -233,7 +233,9 @@ typedef struct struct_plataformas {
     int quantPlataformas;
 } Plataformas;
 
-typedef struct struct_escada_cima EscadaCima;  // Declaração Antecipada
+// Declaração Antecipada por ser variável de EscadaBaixo
+typedef struct struct_escada_cima EscadaCima;
+
 typedef struct struct_escada_baixo {
     Posicao posicao;
     EscadaCima *escadaCima;
@@ -249,6 +251,7 @@ typedef struct struct_escada_meio {
     Color cor;
 } EscadaMeio;
 
+// Definição da struct declarada anteriormente
 struct struct_escada_cima {
     Posicao posicao;
     EscadaBaixo *escadaBaixo;
@@ -294,8 +297,8 @@ Portal GetPortalPadrao();
 
 // Funções para carregar o mapa
 // Arquivo de Texto -> Matriz -> Structs
-void CarregarMapa(int numeroFase, char mapa[MAPA_X][]);
-void MatrizParaStructs(char mapa[MAPA_X][], Player *player, Inimigos *inimigos, Plataformas *plataformas, Escadas *escadas, Portal *portal);
+void CarregarMapa(int numeroFase, char mapa[MAPA_X][MAPA_Y]);
+void MatrizParaStructs(char mapa[MAPA_X][MAPA_Y], Player *player, Inimigos *inimigos, Plataformas *plataformas, Escadas *escadas, Portal *portal);
 
 // Funções para lidar com a movimentação e colisão do Player e Inimigos
 // Feitas com a ajuda do DeepSeek, pq meu deus eu odeio física, e a física me odeia
@@ -315,13 +318,13 @@ EstadoJogo LoopJogo();
 int main(void)
 {
     // Inicializando o estado do jogo
-    EstadoMain estado = MENU;
+    EstadoJogo estado = MENU;
 
     // Flags para o uso de vsync e dpi alto em telas de alta resolução
 	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 
     // Criando a janela
-    InitWindow(TELA_ALTURA, TELA_LARGURA, "Donkey Kong em C com Raylib");
+    InitWindow(TELA_LARGURA, TELA_ALTURA, "Donkey Kong em C com Raylib");
 
     // Setando o FPS
     SetTargetFPS(FPS);
@@ -382,7 +385,7 @@ Player GetPlayerPadrao()
         GetScorePadrao(),
         GetPosicaoPadrao(),
         1,
-        PLAYER_VELOCIDADE_HORIZONTAL,
+        0.0f,
         0,
         PLAYER_ALTURA,
         PLAYER_COMPRIMENTO,
@@ -395,7 +398,7 @@ Inimigo GetInimigoPadrao()
 {
     Inimigo inimigoPadrao = {
         GetPosicaoPadrao(),
-        INIMIGO_VELOCIDADE_HORIZONTAL,
+        0.0f,
         1,
         INIMIGO_ALTURA,
         INIMIGO_COMPRIMENTO,
@@ -420,7 +423,7 @@ Inimigos GetInimigosPadrao()
 Plataforma GetPlataformaPadrao()
 {
     Plataforma plataformaPadrao = {
-        getPosicaoPadrao(),
+        GetPosicaoPadrao(),
         PLATAFORMA_ALTURA,
         PLATAFORMA_COMPRIMENTO,
         PLATAFORMA_COR
@@ -1009,7 +1012,7 @@ EstadoJogo LoopJogo(void)
                 estadoInterno = JOGO_INTERNO;
                 break;
 
-            case JOGO_INTERNO:
+            case JOGANDO:
             {
                 float deltaTime = GetFrameTime();
 
