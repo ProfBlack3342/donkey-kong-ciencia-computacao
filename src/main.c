@@ -233,6 +233,7 @@ typedef struct struct_plataformas {
     int quantPlataformas;
 } Plataformas;
 
+typedef struct struct_escada_cima EscadaCima;  // Declaração Antecipada
 typedef struct struct_escada_baixo {
     Posicao posicao;
     EscadaCima *escadaCima;
@@ -248,13 +249,13 @@ typedef struct struct_escada_meio {
     Color cor;
 } EscadaMeio;
 
-typedef struct struct_escada_cima {
+struct struct_escada_cima {
     Posicao posicao;
     EscadaBaixo *escadaBaixo;
     float altura;
     float comprimento;
     Color cor;
-} EscadaCima;
+};
 
 typedef struct struct_escadas {
     EscadaBaixo escadaBaixo[ESCADA_BAIXO_MAX];
@@ -291,18 +292,22 @@ EscadaCima GetEscadaCimaPadrao();
 Escadas GetEscadasPadrao();
 Portal GetPortalPadrao();
 
-// Funções de lógica do jogo
-// Carregar o mapa, atualizar a posição do jogador, dos inimigos, etc.
+// Funções para carregar o mapa
+// Arquivo de Texto -> Matriz -> Structs
 void CarregarMapa(int numeroFase, char mapa[MAPA_X][]);
 void MatrizParaStructs(char mapa[MAPA_X][], Player *player, Inimigos *inimigos, Plataformas *plataformas, Escadas *escadas, Portal *portal);
-void AtualizarPlayer(Player *player, Plataformas *plataformas, float delta);
+
+// Funções para lidar com a movimentação e colisão do Player e Inimigos
+// Feitas com a ajuda do DeepSeek, pq meu deus eu odeio física, e a física me odeia
+int PontoSobrePlataforma(float x, float y, Plataformas *plataformas);
+void AtualizarPlayer(Player *player, Plataformas *plataformas, Inimigos *inimigos, float delta);
 void AtualizarInimigos(Inimigos *inimigos, Plataformas *plataformas, float delta);
 
 // Funções para os diferentes loops de tela: Menu, Score e Jogo
 // Quando encerram, retornam o próximo estado a ser desenhado
-EstadoMain LoopMenu();
-EstadoMain LoopScore();
-EstadoMain LoopJogo();
+EstadoJogo LoopMenu();
+EstadoJogo LoopScore();
+EstadoJogo LoopJogo();
 
 //----------------------------------------------------------------------------------
 // Função Main
@@ -328,14 +333,15 @@ int main(void)
         {
             case MENU:
                 // Jogo no menu, pode ir para score, jogo ou fim
-                estadoMain = LoopMenu();
+                estado = LoopMenu();
+                break;
             case SCORE:
                 // Jogo no score, pode voltar ao menu
-                estadoMain = LoopScore();
+                estado = LoopScore();
                 break;
             case JOGO:
                 // Jogo rodando, pode voltar ao menu ou ir para o fim
-                estadoMain = LoopJogo();
+                estado = LoopJogo();
                 break;
             case FIM:
                 // Fim do jogo, encerrar loop/janela
@@ -507,83 +513,121 @@ Portal GetPortalPadrao()
     return portalPadrao;
 }
 
-void CarregarMapa(int numeroFase, char mapa[MAPA_X][])
+void CarregarMapa(int numeroFase, char mapa[MAPA_X][MAPA_Y])
 {
     char nomeMapaInicio[] = "mapa";
     char nomeMapaFim[] = ".txt";
     char nomeMapa[10];                  // {'m', 'a', 'p', 'a', 'N', '.', 't', 'x', 't', '\0'}
     snprintf(nomeMapa, sizeof(nomeMapa), "%s%d%s", nomeMapaInicio, numeroFase, nomeMapaFim);
 
-    char elementoMapa;
+    // Buffer para uma linha do arquivo: MAPA_X caracteres + '\n' + '\0'
+    char linha[MAPA_X + 2];
+    int lin = 0;         // índice da linha atual no arquivo (0 a MAPA_Y-1)
 
-    FILE *arquivo;
-    if(!(arquivo =  fopen(nomeMapa, "r")))
-    {
-        // Erro na abertura do arquivo
+    FILE *arquivo = fopen(nomeMapa, "r");
+    if (!arquivo) {
+        // Em caso de erro, preenche toda a matriz com espaços
+        for (int col = 0; col < MAPA_X; col++)
+            for (int l = 0; l < MAPA_Y; l++)
+                mapa[col][l] = ' ';
+        return;
     }
-    else
-    {
-        for(int i = 0; i < MAPA_X; i++)
-        {
-            for(int j = 0; j < MAPA_Y; j++)
-            {
-                mapa[i][j] = getc(arquivo);
-            }
-            getc(arquivo);
+
+    // Lê no máximo MAPA_Y linhas do arquivo
+    while (lin < MAPA_Y && fgets(linha, sizeof(linha), arquivo) != NULL) {
+        // Remove o caractere de nova linha (\n ou \r\n)
+        linha[strcspn(linha, "\r\n")] = '\0';
+
+        // Copia cada caractere da linha para a coluna correspondente, na linha 'lin'
+        int col;
+        for (col = 0; col < MAPA_X && linha[col] != '\0'; col++) {
+            mapa[col][lin] = linha[col];   // transposição aqui: [coluna][linha]
         }
+        // Preenche o restante das colunas com espaço (linha muito curta)
+        while (col < MAPA_X) {
+            mapa[col][lin] = ' ';
+            col++;
+        }
+        lin++;
+    }
+
+    // Se o arquivo terminou antes de MAPA_Y linhas, preenche o restante
+    while (lin < MAPA_Y) {
+        for (int col = 0; col < MAPA_X; col++) {
+            mapa[col][lin] = ' ';
+        }
+        lin++;
     }
 
     fclose(arquivo);
 }
-void MatrizParaStructs(char mapa[MAPA_X][], Player *player, Inimigos *inimigos, Plataformas *plataformas, Escadas *escadas, Portal *portal)
+void MatrizParaStructs(char mapa[MAPA_X][MAPA_Y], Player *player, Inimigos *inimigos, Plataformas *plataformas, Escadas *escadas, Portal *portal)
 {
     EscadaBaixo *escadaBaixo;
     EscadaCima *escadaCima;
 
-    for(int i = 0; i < MAPA_Y; i++)
+    for(int i = 0; i < MAPA_X; i++)
     {
-        for(int j = 0; j < MAPA_X; j++)
+        escadaBaixo = NULL;
+        escadaCima = NULL;
+        
+        for(int j = 0; j < MAPA_Y; j++)
         {
-            switch(mapa[j][i])
+            switch(mapa[i][j])
             {
                 case 'P':   // Posição do Player
                     player->posicao.x = (i * MULTIPLICADOR_TELA);
                     player->posicao.y = (j * MULTIPLICADOR_TELA);
                     break;
                 case 'E':   // Posição de um Inimigo
-                    inimigos->inimigo[inimigos->quantInimigos].posicao.x = (i * MULTIPLICADOR_TELA);
-                    inimigos->inimigo[inimigos->quantInimigos].posicao.y = (j * MULTIPLICADOR_TELA);
-                    inimigos->quantInimigos++;
+                    if(inimigos->quantInimigos < INIMIGO_MAX)
+                    {
+                        inimigos->inimigo[inimigos->quantInimigos].posicao.x = (i * MULTIPLICADOR_TELA);
+                        inimigos->inimigo[inimigos->quantInimigos].posicao.y = (j * MULTIPLICADOR_TELA);
+                        inimigos->quantInimigos++;
+                    }
                     break;
                 case 'Z':   // Posição de uma Plataforma
-                    plataformas->plataforma[plataformas->quantPlataformas].posicao.x = (i * MULTIPLICADOR_TELA);
-                    plataformas->plataforma[plataformas->quantPlataformas].posicao.y = (j * MULTIPLICADOR_TELA);
-                    plataformas->quantPlataformas++;
+                    if(plataformas->quantPlataformas < PLATAFORMA_MAX)
+                    {
+                        plataformas->plataforma[plataformas->quantPlataformas].posicao.x = (i * MULTIPLICADOR_TELA);
+                        plataformas->plataforma[plataformas->quantPlataformas].posicao.y = (j * MULTIPLICADOR_TELA);
+                        plataformas->quantPlataformas++;
+                    }
                     break;
                 case 'S':   // Posição de uma parte de baixo de Escada
-                    escadaBaixo = &(escadas->escadaBaixo[escadas->quantEscadasBaixo]);
-                    escadaBaixo->posicao.x = (i * MULTIPLICADOR_TELA);
-                    escadaBaixo->posicao.y = (j * MULTIPLICADOR_TELA);
+                    if(escadas->quantEscadasBaixo < ESCADA_BAIXO_MAX)
+                    {
+                        escadaBaixo = &(escadas->escadaBaixo[escadas->quantEscadasBaixo]);
+                        escadaBaixo->posicao.x = (i * MULTIPLICADOR_TELA);
+                        escadaBaixo->posicao.y = (j * MULTIPLICADOR_TELA);
 
-                    escadaBaixo->escadaCima = escadaCima;
-                    escadaCima->escadaBaixo = escadaBaixo;
+                        escadaBaixo->escadaCima = escadaCima;
+                        escadaCima->escadaBaixo = escadaBaixo;
 
-                    escadas->quantEscadasBaixo++;
+                        escadas->quantEscadasBaixo++;
+                    }
                     break;
                 case 'D':   // Posição de uma parte de cima de Escada
-                    escadaCima = &(escadas->escadaCima[escadas->quantEscadasCima]);
-                    escadaCima->posicao.x = (i * MULTIPLICADOR_TELA);
-                    escadaCima->posicao.y = (j * MULTIPLICADOR_TELA);
-                    escadas->quantEscadasCima++;
+                    if(escadas->quantEscadasCima < ESCADA_CIMA_MAX)
+                    {
+                        escadaCima = &(escadas->escadaCima[escadas->quantEscadasCima]);
+                        escadaCima->posicao.x = (i * MULTIPLICADOR_TELA);
+                        escadaCima->posicao.y = (j * MULTIPLICADOR_TELA);
+                        escadas->quantEscadasCima++;
+                    }
                     break;
                 case 'F':   // Posição do Portal de saída da fase
                     portal->posicao.x = (i * MULTIPLICADOR_TELA);
                     portal->posicao.y = (j * MULTIPLICADOR_TELA);
                     break;
                 case 'H':   // Posição de uma parte do meio de Escada
-                    escadas->escadaMeio[escadas->quantEscadasMeio].posicao.x = (i * MULTIPLICADOR_TELA);
-                    escadas->escadaMeio[escadas->quantEscadasMeio].posicao.y = (j * MULTIPLICADOR_TELA);
-                    escadas->quantEscadasMeio++;
+                    if(escadas->quantEscadasMeio < ESCADA_MEIO_MAX)
+                    {
+                        escadas->escadaMeio[escadas->quantEscadasMeio].posicao.x = (i * MULTIPLICADOR_TELA);
+                        escadas->escadaMeio[escadas->quantEscadasMeio].posicao.y = (j * MULTIPLICADOR_TELA);
+                        escadas->quantEscadasMeio++;
+                    }
                     break;
                 default:    // Espaço vazio
 
@@ -591,139 +635,249 @@ void MatrizParaStructs(char mapa[MAPA_X][], Player *player, Inimigos *inimigos, 
         }
     }
 }
-void AtualizarPlayer(Player *player, Plataformas *plataformas, float delta)
+
+int PontoSobrePlataforma(float x, float y, Plataformas *plataformas)
 {
-    Plataforma *plataforma;
-
-    int bateuEmAlgo;
-
-    if (IsKeyDown(KEY_LEFT))
-    {
-        player->posicao.x -= (PLAYER_VELOCIDADE_HORIZONTAL * delta);
-    }
-    if (IsKeyDown(KEY_RIGHT))
-    {
-        player->posicao.x += (PLAYER_VELOCIDADE_HORIZONTAL * delta);
-    }
-    if (IsKeyDown(KEY_SPACE) && player->podePular)
-    {
-        player->velocidade = -PLAYER_VELOCIDADE_PULO;
-        player->podePular = 0;
-    }
-
-    bateuEmAlgo = 0;
     for (int i = 0; i < plataformas->quantPlataformas; i++)
     {
-        plataforma = &(plataformas->plataforma[i]);
+        Plataforma *p = &plataformas->plataforma[i];
+        Rectangle r = { p->posicao.x, p->posicao.y, p->comprimento, p->altura };
+        if (CheckCollisionPointRec((Vector2){x, y}, r))
+            return 1;
+    }
+    return 0;
+}
+void AtualizarPlayer(Player *player, Plataformas *plataformas, Inimigos *inimigos, float delta)
+{
+    // ========== 1. MOVIMENTAÇÃO HORIZONTAL COM COLISÃO ==========
+    float novoX = player->posicao.x;
+    if (IsKeyDown(KEY_LEFT))  novoX -= PLAYER_VELOCIDADE_HORIZONTAL * delta;
+    if (IsKeyDown(KEY_RIGHT)) novoX += PLAYER_VELOCIDADE_HORIZONTAL * delta;
 
-        if
-        (
-            plataforma->posicao.x <= player->posicao.x &&
-            (plataforma->posicao.x + PLATAFORMA_COMPRIMENTO) >= player->posicao.x &&
-            plataforma->posicao.y >= player->posicao.y &&
-            plataforma->posicao.y <= (player->posicao.y + (player->velocidade * delta)))
+    Rectangle playerRectX = {
+        novoX, player->posicao.y,
+        player->comprimento, player->altura
+    };
+
+    int podeMoverX = 1;
+    for (int i = 0; i < plataformas->quantPlataformas; i++)
+    {
+        Plataforma *plat = &plataformas->plataforma[i];
+        Rectangle platRect = {
+            plat->posicao.x, plat->posicao.y,
+            plat->comprimento, plat->altura
+        };
+        if (CheckCollisionRecs(playerRectX, platRect))
         {
-            bateuEmAlgo = 1;
-            player->velocidade = 0.0f;
-            player->posicao.y = plataforma->posicao.y;
+            podeMoverX = 0;
+            break;
+        }
+    }
+    if (podeMoverX) player->posicao.x = novoX;
+
+    // ========== 2. VERIFICAÇÃO DE CHÃO PARA PULO ==========
+    // Pontos sob os pés (esquerdo e direito), 1 pixel abaixo da base
+    float peEsqX = player->posicao.x + 2.0f;                      // margem para não confundir bordas
+    float peDirX = player->posicao.x + player->comprimento - 2.0f;
+    float peY    = player->posicao.y + player->altura + 1.0f;     // logo abaixo do pé
+
+    int estaNoChao = PontoSobrePlataforma(peEsqX, peY, plataformas) ||
+                     PontoSobrePlataforma(peDirX, peY, plataformas);
+
+    if (IsKeyDown(KEY_SPACE) && estaNoChao)
+    {
+        player->velocidade = -PLAYER_VELOCIDADE_PULO;
+    }
+
+    // ========== 3. FÍSICA VERTICAL (GRAVIDADE + COLISÃO) ==========
+    player->velocidade += GRAVIDADE * delta;
+    float novoY = player->posicao.y + player->velocidade * delta;
+
+    Rectangle playerRectAtual = {
+        player->posicao.x, player->posicao.y,
+        player->comprimento, player->altura
+    };
+    Rectangle playerRectNovo = {
+        player->posicao.x, novoY,
+        player->comprimento, player->altura
+    };
+
+    int bateu = 0;
+    for (int i = 0; i < plataformas->quantPlataformas; i++)
+    {
+        Plataforma *plat = &plataformas->plataforma[i];
+        Rectangle platRect = {
+            plat->posicao.x, plat->posicao.y,
+            plat->comprimento, plat->altura
+        };
+
+        if (CheckCollisionRecs(playerRectNovo, platRect))
+        {
+            // Caindo (velocidade > 0) e o jogador estava acima da plataforma
+            if (player->velocidade > 0 && (playerRectAtual.y + player->altura <= plat->posicao.y + 1.0f))
+            {
+                player->posicao.y = plat->posicao.y - player->altura;  // pouso perfeito
+                player->velocidade = 0.0f;
+                bateu = 1;
+            }
+            // Subindo (velocidade < 0) e estava abaixo – bate a cabeça
+            else if (player->velocidade < 0 && (playerRectAtual.y >= plat->posicao.y + plat->altura - 1.0f))
+            {
+                player->posicao.y = plat->posicao.y + plat->altura;
+                player->velocidade = 0.0f;
+            }
             break;
         }
     }
 
-    if (!bateuEmAlgo)
+    if (!bateu)
+        player->posicao.y = novoY;
+
+    // ========== 4. ATUALIZAÇÃO FINAL DO ESTADO DE CHÃO ==========
+    // Recalcula após o movimento para uso externo (ex.: animações, HUD)
+    peEsqX = player->posicao.x + 2.0f;
+    peDirX = player->posicao.x + player->comprimento - 2.0f;
+    peY    = player->posicao.y + player->altura + 1.0f;
+    player->podePular = PontoSobrePlataforma(peEsqX, peY, plataformas) ||
+                        PontoSobrePlataforma(peDirX, peY, plataformas);
+
+    // ========== 5. COLISÃO COM INIMIGOS ==========
+    Rectangle playerRectFinal = {
+        player->posicao.x, player->posicao.y,
+        player->comprimento, player->altura
+    };
+    for (int i = 0; i < inimigos->quantInimigos; i++)
     {
-        player->posicao.y += (player->velocidade * delta);
-        player->velocidade += (GRAVIDADE * delta);
-        player->podePular = 0;
-    }
-    else
-    {
-        player->podePular = 1;
+        Inimigo *inim = &inimigos->inimigo[i];
+        Rectangle inimRect = {
+            inim->posicao.x, inim->posicao.y,
+            inim->comprimento, inim->altura
+        };
+        if (CheckCollisionRecs(playerRectFinal, inimRect))
+        {
+            player->isVivo = 0;
+            return;  // morte instantânea
+        }
     }
 }
 void AtualizarInimigos(Inimigos *inimigos, Plataformas *plataformas, float delta)
 {
-    Inimigo *inimigo;
-    Plataforma *plataforma;
-
-    int bateuEmAlgo;
-
-    for(int i = 0; i < inimigos->quantInimigos; i++)
+    for (int i = 0; i < inimigos->quantInimigos; i++)
     {
-        inimigo = &(inimigos->inimigo[i]);
+        Inimigo *inimigo = &inimigos->inimigo[i];
 
-        // Checando pra ver se chegou no canto da tela, e invertendo a direção se for o caso
-        if(inimigo->direcao == 1)           // Indo para a direita
+        // ---------- 1. DETECÇÃO DE BORDA DA PLATAFORMA (FIM DO CHÃO) ----------
+        float pontoVerificacaoX;
+        float pontoVerificacaoY = inimigo->posicao.y + inimigo->altura + 1.0f; // 1 pixel abaixo dos pés
+
+        if (inimigo->direcao == 1) // Indo para a direita
         {
-            if(inimigo->posicao.x >= (TELA_LARGURA - INIMIGO_COMPRIMENTO))
+            pontoVerificacaoX = inimigo->posicao.x + inimigo->comprimento + 1.0f;
+            if (!PontoSobrePlataforma(pontoVerificacaoX, pontoVerificacaoY, plataformas))
+                inimigo->direcao = -1;   // Inverte para a esquerda
+        }
+        else if (inimigo->direcao == -1) // Indo para a esquerda
+        {
+            pontoVerificacaoX = inimigo->posicao.x - 1.0f;
+            if (!PontoSobrePlataforma(pontoVerificacaoX, pontoVerificacaoY, plataformas))
+                inimigo->direcao = 1;    // Inverte para a direita
+        }
+
+        // ---------- 2. MOVIMENTAÇÃO HORIZONTAL COM COLISÃO (PAREDES) ----------
+        float novoX = inimigo->posicao.x;
+        if (inimigo->direcao == 1)
+            novoX += INIMIGO_VELOCIDADE_HORIZONTAL * delta;
+        else if (inimigo->direcao == -1)
+            novoX -= INIMIGO_VELOCIDADE_HORIZONTAL * delta;
+
+        Rectangle inimRectX = {
+            novoX, inimigo->posicao.y,
+            inimigo->comprimento, inimigo->altura
+        };
+
+        int podeMoverX = 1;
+        for (int j = 0; j < plataformas->quantPlataformas; j++)
+        {
+            Plataforma *plat = &plataformas->plataforma[j];
+            Rectangle platRect = {
+                plat->posicao.x, plat->posicao.y,
+                plat->comprimento, plat->altura
+            };
+
+            if (CheckCollisionRecs(inimRectX, platRect))
             {
-                inimigo->direcao = -1;
-            }
-        }
-        else if(inimigo->direcao == -1)     // Indo para a esquerda
-        {
-            if(inimigo->posicao.x <= INIMIGO_COMPRIMENTO)
-            {
-                inimigo->direcao = 1;
-            }
-        }
-        else                                // Parado
-        {
-
-        }
-
-        // Aplicando a movimentação na direção do movimento
-        if(inimigo->direcao == 1)           // Indo para a direita
-        {
-            inimigo.posicao.x += INIMIGO_VELOCIDADE_HORIZONTAL * delta;
-        }
-        else if(inimigo->direcao == -1)     // Indo para a esquerda
-        {
-            inimigo.posicao.x -= INIMIGO_VELOCIDADE_HORIZONTAL * delta;
-        }
-        else                                // Parado
-        {
-
-        }
-
-        // Checando colisões com plataformas
-        bateuEmAlgo = 0;
-        for(int j = 0; j < plataformas->quantPlataformas; j++)
-        {
-            plataforma = &(plataformas->plataforma[i]);
-
-            if(
-                plataforma->posicao.x <= inimigo->posicao.x &&
-                (plataforma->posicao.x + PLATAFORMA_COMPRIMENTO) >= inimigo->posicao.x &&
-                plataforma->posicao.y >= inimigo->posicao.y &&
-                plataforma->posicao.y <= (inimigo->posicao.y + (inimigo->velocidade * delta))
-            )
-            {
-                bateuEmAlgo = 1;
-                inimigo->velocidade = 0.0f;
-                inimigo->posicao.y = plataforma->posicao.y;
+                podeMoverX = 0;
+                // Inverte a direção ao bater na parede
+                inimigo->direcao = (inimigo->direcao == 1) ? -1 : 1;
                 break;
             }
         }
 
-        if(!bateuEmAlgo)
+        if (podeMoverX)
+            inimigo->posicao.x = novoX;
+
+        // ---------- 3. FÍSICA VERTICAL (GRAVIDADE + COLISÃO) ----------
+        inimigo->velocidade += GRAVIDADE * delta;
+        float novoY = inimigo->posicao.y + inimigo->velocidade * delta;
+
+        Rectangle inimRectAtual = {
+            inimigo->posicao.x, inimigo->posicao.y,
+            inimigo->comprimento, inimigo->altura
+        };
+        Rectangle inimRectNovo = {
+            inimigo->posicao.x, novoY,
+            inimigo->comprimento, inimigo->altura
+        };
+
+        int bateu = 0;
+        for (int j = 0; j < plataformas->quantPlataformas; j++)
         {
-            inimigo->posicao.y += (inimigo->velocidade * delta);
-            inimigo->velocidade += (GRAVIDADE * delta);
+            Plataforma *plat = &plataformas->plataforma[j];
+            Rectangle platRect = {
+                plat->posicao.x, plat->posicao.y,
+                plat->comprimento, plat->altura
+            };
+
+            if (CheckCollisionRecs(inimRectNovo, platRect))
+            {
+                // Caindo (pouso)
+                if (inimigo->velocidade > 0 && (inimRectAtual.y + inimigo->altura <= plat->posicao.y + 1.0f))
+                {
+                    inimigo->posicao.y = plat->posicao.y - inimigo->altura;
+                    inimigo->velocidade = 0.0f;
+                    bateu = 1;
+                }
+                // Subindo (bate a cabeça)
+                else if (inimigo->velocidade < 0 && (inimRectAtual.y >= plat->posicao.y + plat->altura - 1.0f))
+                {
+                    inimigo->posicao.y = plat->posicao.y + plat->altura;
+                    inimigo->velocidade = 0.0f;
+                }
+                break;
+            }
         }
+
+        if (!bateu)
+            inimigo->posicao.y = novoY;
     }
 }
 
-EstadoMain LoopMenu()
+EstadoJogo LoopMenu(void)
 {
-    // Maquina de estado do jogo, define o que o programa vai fazer após este loop encerrar
-    EstadoMain estado;
-
-    int opcaoSelecionada = 0;   // 0=Iniciar, 1=Scores, 2=Fim
+    EstadoJogo estado = MENU;
+    int opcaoSelecionada = 0;
     int loopMenu = 1;
 
-    while(loopMenu)
+    while (loopMenu)
     {
+        // Permite fechar a janela mesmo no menu
+        if (WindowShouldClose())
+        {
+            estado = FIM;
+            loopMenu = 0;
+            continue;
+        }
+
         // Navegação por teclas
         if (IsKeyPressed(KEY_DOWN))
             opcaoSelecionada = (opcaoSelecionada + 1) % 3;
@@ -732,9 +886,9 @@ EstadoMain LoopMenu()
 
         // Navegação pelo mouse
         Vector2 mouse = GetMousePosition();
-        Rectangle retIniciar = { largura/2 - 100, 200, 200, 40 };
-        Rectangle retScores  = { largura/2 - 100, 260, 200, 40 };
-        Rectangle retSair    = { largura/2 - 100, 320, 200, 40 };
+        Rectangle retIniciar = { TELA_LARGURA/2 - 100, 200, 200, 40 };
+        Rectangle retScores  = { TELA_LARGURA/2 - 100, 260, 200, 40 };
+        Rectangle retSair    = { TELA_LARGURA/2 - 100, 320, 200, 40 };
 
         // Seleção pelo mouse
         if (CheckCollisionPointRec(mouse, retIniciar))
@@ -742,16 +896,16 @@ EstadoMain LoopMenu()
             opcaoSelecionada = 0;
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
             {
-                estadoMain = JOGO;   //Muda para o jogo
+                estado = JOGO;
                 loopMenu = 0;
             }
-        } 
+        }
         else if (CheckCollisionPointRec(mouse, retScores))
         {
             opcaoSelecionada = 1;
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
             {
-                estadoMain = SCORE; //Muda para scores
+                estado = SCORE;
                 loopMenu = 0;
             }
         }
@@ -760,35 +914,36 @@ EstadoMain LoopMenu()
             opcaoSelecionada = 2;
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
             {
-                estadoMain = FIM;   // Sai do programa
+                estado = FIM;
                 loopMenu = 0;
             }
         }
 
-        // Seleção com enter
-        if (IsKeyPressed(KEY_ENTER)) {
+        // Seleção com Enter
+        if (IsKeyPressed(KEY_ENTER))
+        {
             if (opcaoSelecionada == 0)
             {
-                estadoMain = JOGO;
+                estado = JOGO;
                 loopMenu = 0;
             }
             else if (opcaoSelecionada == 1)
             {
-                estadoMain = SCORE;
+                estado = SCORE;
                 loopMenu = 0;
             }
             else if (opcaoSelecionada == 2)
             {
-                estadoMain = FIM;
+                estado = FIM;
                 loopMenu = 0;
             }
         }
 
-        // ----- Desenho do menu -----
+        // Desenho do menu
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
-        DrawText("MENU PRINCIPAL", largura/2 - MeasureText("MENU PRINCIPAL", 30)/2, 80, 30, DARKGRAY);
+        DrawText("MENU PRINCIPAL", TELA_LARGURA/2 - MeasureText("MENU PRINCIPAL", 30)/2, 80, 30, DARKGRAY);
 
         Color corIniciar = (opcaoSelecionada == 0) ? RED : DARKGRAY;
         Color corScores  = (opcaoSelecionada == 1) ? RED : DARKGRAY;
@@ -806,30 +961,27 @@ EstadoMain LoopMenu()
 
     return estado;
 }
-EstadoMain LoopScore()
+EstadoJogo LoopScore()
 {
     EstadoMain estado;
+    FILE *arquivo;
 
 
 
+    fclose(arquivo);
     return estado;
 }
-EstadoMain LoopJogo()
+EstadoJogo LoopJogo(void)
 {
-    // Maquina de estado do jogo, define o que o programa vai fazer após este loop encerrar
-    EstadoMain estado;
-
-    // Maquina de estado interna, para carregamento, execução e encerramento do jogo em momentos distintos
+    EstadoJogo estado = MENU; // valor inicial seguro
     EstadoJogoInterno estadoInterno = CARREGAMENTO;
 
-    // Inicialização das structs
     Player player = GetPlayerPadrao();
     Inimigos inimigos = GetInimigosPadrao();
     Plataformas plataformas = GetPlataformasPadrao();
     Escadas escadas = GetEscadasPadrao();
     Portal portal = GetPortalPadrao();
 
-    // Info do mapa atual
     int mapaAtual = 0;
     char mapa[MAPA_X][MAPA_Y];
 
@@ -837,95 +989,90 @@ EstadoMain LoopJogo()
     int isPausado = 0;
     int opcaoPause = 0;
 
-    float timerNivel = 0.0;
+    float timerNivel = 0.0f;
 
-    while(loopJogo)
+    while (loopJogo)
     {
-        switch(estadoInterno)
+        if (WindowShouldClose())
+        {
+            estado = FIM;
+            loopJogo = 0;
+            break;
+        }
+
+        switch (estadoInterno)
         {
             case CARREGAMENTO:
-                // Carregar o mapa atual para a matriz
                 CarregarMapa(mapaAtual, mapa);
-                // Interpretar a matriz para as structs
                 MatrizParaStructs(mapa, &player, &inimigos, &plataformas, &escadas, &portal);
-                timerNivel = 0.0;
-                estadoInterno = JOGO;
+                timerNivel = 0.0f;
+                estadoInterno = JOGO_INTERNO;
                 break;
-            case JOGO:
-                // Simular o jogo com as structs
 
-                // Tempo atual da fase
+            case JOGO_INTERNO:
+            {
                 float deltaTime = GetFrameTime();
 
-                // Detecção de input
+                // Controle de pausa
                 if (IsKeyPressed(KEY_ESCAPE))
                 {
                     isPausado = !isPausado;
-                    opcaoPause = 0; // reseta seleção ao abrir o menu
+                    opcaoPause = 0;
                 }
 
-                // Atualizando a posição do player e dos inimigos se o jogo não estiver pausado
-                if(!isPausado)
+                // Definição dos retângulos do menu de pausa
+                Rectangle retContinuar  = { TELA_LARGURA/2 - 120, TELA_ALTURA/2 - 50, 240, 40 };
+                Rectangle retMenu       = { TELA_LARGURA/2 - 120, TELA_ALTURA/2 + 10, 240, 40 };
+                Rectangle retSair       = { TELA_LARGURA/2 - 120, TELA_ALTURA/2 + 70, 240, 40 };
+
+                if (!isPausado)
                 {
                     timerNivel += deltaTime;
-                    AtualizarPlayer(&player, &plataformas, deltaTime);
+                    AtualizarPlayer(&player, &plataformas, &inimigos, deltaTime);
                     AtualizarInimigos(&inimigos, &plataformas, deltaTime);
 
-                    // Resetando a posição do player se R for pressionado
-                    // Para testes, remover depois
+                    // Reset de teste (tecla R)
                     if (IsKeyPressed(KEY_R))
                     {
-                        player.position = (Vector2){ 450, 280 };
+                        player.posicao.x = 450;
+                        player.posicao.y = 280;
                     }
                 }
                 else
                 {
-                    // ----- Atualização do menu de pausa -----
-                    // Navegação por teclado
+                    // Lógica de navegação do menu de pausa (teclado e mouse)
                     if (IsKeyPressed(KEY_DOWN))
-                    {
                         opcaoPause = (opcaoPause + 1) % 3;
-                    }
-
                     if (IsKeyPressed(KEY_UP))
-                    {
                         opcaoPause = (opcaoPause == 0) ? 2 : opcaoPause - 1;
-                    }
 
-                    // Confirmação com Enter
                     if (IsKeyPressed(KEY_ENTER))
                     {
                         if (opcaoPause == 0)            // Continuar
-                        {          
+                        {
                             isPausado = 0;
                         }
                         else if (opcaoPause == 1)       // Menu Principal
-                        {   
+                        {
                             estado = MENU;
+                            estadoInterno = ENCERRAMENTO;
                             isPausado = 0;
-                            // Opcional: chame uma função para limpar dados do jogo
                         }
                         else if (opcaoPause == 2)       // Sair
-                        {   
+                        {
                             estado = FIM;
                             estadoInterno = ENCERRAMENTO;
                             isPausado = 0;
                         }
                     }
 
-                    // Navegação por mouse
                     Vector2 mouse = GetMousePosition();
-                    Rectangle retContinuar  = { TELA_LARGURA/2 - 120, TELA_ALTURA/2 - 50, 240, 40 };
-                    Rectangle retMenu       = { TELA_LARGURA/2 - 120, TELA_ALTURA/2 + 10, 240, 40 };
-                    Rectangle retSair       = { TELA_LARGURA/2 - 120, TELA_ALTURA/2 + 70, 240, 40 };
 
                     if (CheckCollisionPointRec(mouse, retContinuar))
                     {
                         opcaoPause = 0;
                         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-                        {
                             isPausado = 0;
-                        }
                     }
                     else if (CheckCollisionPointRec(mouse, retMenu))
                     {
@@ -949,130 +1096,48 @@ EstadoMain LoopJogo()
                     }
                 }
 
-                // Desenhando o Frame
+                // Desenho da cena
                 BeginDrawing();
-                    // Colorindo o Fundo
-                    ClearBackground(LIGHTGRAY);
+                ClearBackground(LIGHTGRAY);
 
-                    // Desenhando as escadas
-                    for(int i = 0; i < escadas.quantEscadasBaixo; i++)
-                    {
-                        DrawRectangleRec(
-                            (Rectangle){
-                                escadas.escadaBaixo[i].posicao.x,
-                                escadas.escadaBaixo[i].posicao.y,
-                                escadas.escadaBaixo[i].altura,
-                                escadas.escadaBaixo[i].comprimento
-                            }, 
-                            escadas.escadaBaixo[i].cor);
-                    }
-                    for(int i = 0; i < escadas.quantEscadasMeio; i++)
-                    {
-                        DrawRectangleRec(
-                            (Rectangle){
-                                escadas.escadaMeio[i].posicao.x,
-                                escadas.escadaMeio[i].posicao.y,
-                                escadas.escadaMeio[i].altura,
-                                escadas.escadaMeio[i].comprimento
-                            }, 
-                            escadas.escadaMeio[i].cor);
-                    }
-                    for(int i = 0; i < escadas.quantEscadasCima; i++)
-                    {
-                        DrawRectangleRec(
-                            (Rectangle){
-                                escadas.escadaCima[i].posicao.x,
-                                escadas.escadaCima[i].posicao.y,
-                                escadas.escadaCima[i].altura,
-                                escadas.escadaCima[i].comprimento
-                            }, 
-                            escadas.escadaCima[i].cor);
-                    }
+                // Desenho das escadas, portal, plataformas, inimigos, player
+                // ...
 
-                    // Desenhando o portal
-                    DrawRectangleRec(
-                        (Rectangle){
-                            portal.posicao.x,
-                            portal.posicao.y,
-                            portal.altura,
-                            portal.comprimento
-                        }, 
-                        portal.cor);
+                // Desenho do timer
+                int minutos = (int)(timerNivel / 60);
+                int segundos = (int)(timerNivel) % 60;
+                int centesimos = (int)((timerNivel - (int)timerNivel) * 100);
+                DrawText(TextFormat("Tempo: %02d:%02d:%02d", minutos, segundos, centesimos),
+                        10, 10, 30, WHITE);
 
-                    // Desenhando as Plataformas
-                    for(int i = 0; i < plataformas.quantPlataformas; i++)
-                    {
-                        DrawRectangleRec(
-                            (Rectangle){
-                                plataformas.plataforma[i].posicao.x,
-                                plataformas.plataforma[i].posicao.y,
-                                plataformas.plataforma[i].altura,
-                                plataformas.plataforma[i].comprimento
-                            }, 
-                            plataformas.plataforma[i].cor);
-                    }
+                // Menu de pausa sobreposto
+                if (isPausado)
+                {
+                    DrawRectangle(0, 0, TELA_LARGURA, TELA_ALTURA, Fade(BLACK, 0.6f));
+                    DrawText("PAUSA", TELA_LARGURA/2 - MeasureText("PAUSA", 50)/2, TELA_ALTURA/4, 50, WHITE);
 
-                    // Desenhando os inimigos
-                    for(int i = 0; i < inimigos.quantInimigos; i++)
-                    {
-                        DrawRectangleRec(
-                            (Rectangle){
-                                inimigos.inimigo[i].posicao.x,
-                                inimigos.inimigo[i].posicao.y,
-                                inimigos.inimigo[i].altura,
-                                inimigos.inimigo[i].comprimento
-                            }, 
-                            inimigos.inimigo[i].cor);
-                    }
+                    Color corContinuar = (opcaoPause == 0) ? RED : LIGHTGRAY;
+                    Color corMenu      = (opcaoPause == 1) ? RED : LIGHTGRAY;
+                    Color corSair      = (opcaoPause == 2) ? RED : LIGHTGRAY;
 
-                    // Desenhando o player
-                    DrawRectangleRec(
-                        (Rectangle){
-                            player.posicao.x,
-                            player.posicao.y,
-                            player.altura,
-                            player.comprimento
-                        }, 
-                        player.cor);
+                    DrawText("Continuar",       retContinuar.x + 30, retContinuar.y + 8, 25, corContinuar);
+                    DrawText("Menu Principal",  retMenu.x + 10,      retMenu.y + 8,      25, corMenu);
+                    DrawText("Sair",            retSair.x + 80,      retSair.y + 8,      25, corSair);
 
-                    // Desenhando o timer
-                    int minutos = (int)(timerNivel / 60);
-                    int segundos = (int)(timerNivel) % 60;
-                    int centesimos = (int)((timerNivel - (int)timerNivel) * 100);
-                    DrawText(TextFormat("Tempo: %02d:%02d:%02d", minutos, segundos, centesimos),
-                            10, 10, 30, WHITE);
-
-                    // Desenhando o menu de pausa e a sua lógica, se isPausado == 1
-                    if (jogoPausado) {
-                        // Fundo semi-transparente escurecendo a tela
-                        DrawRectangle(0, 0, TELA_LARGURA, TELA_ALTURA, Fade(BLACK, 0.6f));
-
-                        // Título
-                        DrawText("PAUSA", TELA_LARGURA/2 - MeasureText("PAUSA", 50)/2, TELA_ALTURA/4, 50, WHITE);
-
-                        // Opções
-                        Color corContinuar = (opcaoPause == 0) ? RED : LIGHTGRAY;
-                        Color corMenu      = (opcaoPause == 1) ? RED : LIGHTGRAY;
-                        Color corSair      = (opcaoPause == 2) ? RED : LIGHTGRAY;
-
-                        DrawText("Continuar",       retContinuar.x + 30, retContinuar.y + 8, 25, corContinuar);
-                        DrawText("Menu Principal",  retMenu.x + 10,      retMenu.y + 8,      25, corMenu);
-                        DrawText("Sair",            retSair.x + 80,      retSair.y + 8,      25, corSair);
-
-                        // (Opcional) contorno dos retângulos para debug visual
-                        DrawRectangleLinesEx(retContinuar, 1, DARKGRAY);
-                        DrawRectangleLinesEx(retMenu, 1, DARKGRAY);
-                        DrawRectangleLinesEx(retSair, 1, DARKGRAY);
-                    }
+                    DrawRectangleLinesEx(retContinuar, 1, DARKGRAY);
+                    DrawRectangleLinesEx(retMenu, 1, DARKGRAY);
+                    DrawRectangleLinesEx(retSair, 1, DARKGRAY);
+                }
 
                 EndDrawing();
-                break;
+            }
+            break;
+
             case ENCERRAMENTO:
                 loopJogo = 0;
                 break;
         }
     }
-
 
     return estado;
 }
