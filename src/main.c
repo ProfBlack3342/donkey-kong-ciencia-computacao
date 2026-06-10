@@ -966,12 +966,12 @@ EstadoJogo LoopMenu(void)
 }
 EstadoJogo LoopScore()
 {
-    EstadoMain estado;
-    FILE *arquivo;
+    EstadoJogo estado = MENU;
 
+    // Ainda será feito/implementado
+    // FILE *arquivo;
+    // fclose(arquivo);
 
-
-    fclose(arquivo);
     return estado;
 }
 EstadoJogo LoopJogo(void)
@@ -1009,7 +1009,7 @@ EstadoJogo LoopJogo(void)
                 CarregarMapa(mapaAtual, mapa);
                 MatrizParaStructs(mapa, &player, &inimigos, &plataformas, &escadas, &portal);
                 timerNivel = 0.0f;
-                estadoInterno = JOGO_INTERNO;
+                estadoInterno = JOGANDO;
                 break;
 
             case JOGANDO:
@@ -1103,8 +1103,86 @@ EstadoJogo LoopJogo(void)
                 BeginDrawing();
                 ClearBackground(LIGHTGRAY);
 
-                // Desenho das escadas, portal, plataformas, inimigos, player
-                // ...
+                // Desenhando as escadas
+                for (int i = 0; i < escadas.quantEscadasBaixo; i++)
+                {
+                    DrawRectangleRec(
+                        (Rectangle){
+                            escadas.escadaBaixo[i].posicao.x,
+                            escadas.escadaBaixo[i].posicao.y,
+                            escadas.escadaBaixo[i].comprimento,
+                            escadas.escadaBaixo[i].altura
+                        }, 
+                        escadas.escadaBaixo[i].cor);
+                }
+                for (int i = 0; i < escadas.quantEscadasMeio; i++)
+                {
+                    DrawRectangleRec(
+                        (Rectangle){
+                            escadas.escadaMeio[i].posicao.x,
+                            escadas.escadaMeio[i].posicao.y,
+                            escadas.escadaMeio[i].comprimento,
+                            escadas.escadaMeio[i].altura
+                        }, 
+                        escadas.escadaMeio[i].cor);
+                }
+                for (int i = 0; i < escadas.quantEscadasCima; i++)
+                {
+                    DrawRectangleRec(
+                        (Rectangle){
+                            escadas.escadaCima[i].posicao.x,
+                            escadas.escadaCima[i].posicao.y,
+                            escadas.escadaCima[i].comprimento,
+                            escadas.escadaCima[i].altura
+                        }, 
+                        escadas.escadaCima[i].cor);
+                }
+
+                // Desenhando o portal
+                DrawRectangleRec(
+                    (Rectangle){
+                        portal.posicao.x,
+                        portal.posicao.y,
+                        portal.comprimento,
+                        portal.altura
+                    }, 
+                    portal.cor);
+
+                // Desenhando as plataformas
+                for (int i = 0; i < plataformas.quantPlataformas; i++)
+                {
+                    DrawRectangleRec(
+                        (Rectangle){
+                            plataformas.plataforma[i].posicao.x,
+                            plataformas.plataforma[i].posicao.y,
+                            plataformas.plataforma[i].comprimento,
+                            plataformas.plataforma[i].altura
+                        }, 
+                        plataformas.plataforma[i].cor);
+                }
+
+                // Desenhando os inimigos
+                for (int i = 0; i < inimigos.quantInimigos; i++)
+                {
+                    DrawRectangleRec(
+                        (Rectangle){
+                            inimigos.inimigo[i].posicao.x,
+                            inimigos.inimigo[i].posicao.y,
+                            inimigos.inimigo[i].comprimento,
+                            inimigos.inimigo[i].altura
+                        }, 
+                        inimigos.inimigo[i].cor);
+                }
+
+                // Desenhando o player
+                DrawRectangleRec(
+                    (Rectangle){
+                        player.posicao.x,
+                        player.posicao.y,
+                        player.comprimento,
+                        player.altura
+                    }, 
+                    player.cor);
 
                 // Desenho do timer
                 int minutos = (int)(timerNivel / 60);
