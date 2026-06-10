@@ -115,7 +115,8 @@
 #define MAPA_MAX 4
 
 // Score
-#define NOME_PLACAR_MAX 20
+#define PLACAR_NOME_MAX 20
+#define PLACAR_MAX 10
 
 // Player
 #define PLAYER_VELOCIDADE_HORIZONTAL 150.0f
@@ -187,7 +188,7 @@ typedef enum enum_estado_jogo_interno {
 // Structs
 //----------------------------------------------------------------------------------
 typedef struct struct_score {
-    char nome[NOME_PLACAR_MAX];
+    char nome[PLACAR_NOME_MAX];
     float tempoVivo;
     int faseCompletada;
 } Score;
@@ -307,6 +308,11 @@ void MatrizParaStructs(char mapa[MAPA_X][MAPA_Y], Player *player, Inimigos *inim
 int PontoSobrePlataforma(float x, float y, Plataformas *plataformas);
 void AtualizarPlayer(Player *player, Plataformas *plataformas, Inimigos *inimigos, Escadas *escadas, Portal *portal, float delta);
 void AtualizarInimigos(Inimigos *inimigos, Plataformas *plataformas, float delta);
+
+// A fazer: Função para carregar scores de um arquivo binário para um vetor de PLACAR_MAX scores
+// A fazer: Função para comparar scores por lógica própria e devolver o maior (1º: Maior fase, 2º Menor tempo)
+// A fazer: Função que recebe um vetor de scores e ordena ele de melhor a pior, seguindo a lógica anterior
+// A fazer: Função que salva um vetor de PLACAR_MAX scores em um arquivo binário
 
 // Funções para os diferentes loops de tela: Menu, Score e Jogo
 // Quando encerram, retornam o próximo estado a ser desenhado
@@ -1357,7 +1363,7 @@ EstadoJogo LoopJogo()
                                 TELA_LARGURA/2 - 150, TELA_ALTURA/4 + 40, 20, LIGHTGRAY);
                         DrawText(TextFormat("Fase final: %d", player.score.faseCompletada + 1),
                                 TELA_LARGURA/2 - 100, TELA_ALTURA/4 + 70, 20, LIGHTGRAY);
-                                
+
                         // Checar os scores, se for maior ou igual ao último seguindo os critérios,
                         // Perguntar se o usuário deseja salvar seu nome.
                         // Se o usuário digitar algo e apertar "Salvar", salvar o score no binário,
