@@ -1058,6 +1058,7 @@ EstadoJogo LoopJogo()
     int opcaoPause = 0;
 
     float timerNivel = 0.0f;
+    float timerTotal = 0.0f;
 
     int playerGanhou = 0;
 
@@ -1112,20 +1113,22 @@ EstadoJogo LoopJogo()
                     if (player.concluiuFase)
                     {
                         // Salvar tempo e fase no score
-                        player.score.tempoVivo += timerNivel;   // acumula o tempo da fase
+                        timerTotal += timerNivel;   // acumula o tempo da fase
+                        timerNivel = 0.0f;
                         player.score.faseCompletada = mapaAtual;
                         
                         mapaAtual++;   // avança para a próxima fase
                         
                         if(mapaAtual > MAPA_MAX)
                         {
-                            // Player ganhou, mostrar tela de vitória, score e voltar ao menu
+                            // Player ganhou
+                            player.score.tempoVivo = timerTotal;
                             playerGanhou = 1;
                             estadoInterno = ENCERRAMENTO;
                         }
                         else
                         {
-                            // Reinicia a fase (volta ao estado CARREGAMENTO)
+                            // Reinicia a fase
                             estadoInterno = CARREGAMENTO;
                             player.velocidade = 0.0f;
                             player.podePular = 0;
@@ -1135,7 +1138,9 @@ EstadoJogo LoopJogo()
                     }
                     else if(!(player.isVivo))
                     {
-                        // Player morreu, mostrar tela de derrota, score e voltar ao menu
+                        // Player morreu
+                        player.score.tempoVivo += timerNivel;
+                        timerNivel = 0.0f;
                         playerGanhou = 0;
                         estadoInterno = ENCERRAMENTO;
                     }
@@ -1371,17 +1376,19 @@ EstadoJogo LoopJogo()
                     {
                         DrawText("VOCE VENCEU!", TELA_LARGURA/2 - MeasureText("VOCE VENCEU!", 50)/2,
                                 TELA_ALTURA/4 - 30, 50, GREEN);
-                        DrawText(TextFormat("Tempo total: %.2f segundos", player.score.tempoVivo),
+                        DrawText(TextFormat("Tempo sobrevivido: %.2f segundos", player.score.tempoVivo),
                                 TELA_LARGURA/2 - 150, TELA_ALTURA/4 + 40, 20, LIGHTGRAY);
-                        DrawText(TextFormat("Fase final: %d", player.score.faseCompletada + 1),
+                        DrawText(TextFormat("Fase final: %d", player.score.faseCompletada),
                                 TELA_LARGURA/2 - 100, TELA_ALTURA/4 + 70, 20, LIGHTGRAY);
                     }
                     else
                     {
                         DrawText("VOCE MORREU!", TELA_LARGURA/2 - MeasureText("VOCE MORREU!", 50)/2,
                                 TELA_ALTURA/4 - 30, 50, RED);
-                        DrawText(TextFormat("Tempo sobrevivido: %.2f segundos", timerNivel),
-                                TELA_LARGURA/2 - 170, TELA_ALTURA/4 + 40, 20, LIGHTGRAY);
+                        DrawText(TextFormat("Tempo sobrevivido: %.2f segundos", player.score.tempoVivo),
+                                TELA_LARGURA/2 - 150, TELA_ALTURA/4 + 40, 20, LIGHTGRAY);
+                        DrawText(TextFormat("Fase final: %d", player.score.faseCompletada),
+                                TELA_LARGURA/2 - 100, TELA_ALTURA/4 + 70, 20, LIGHTGRAY);
                     }
 
                     // Checar os scores, se for maior ou igual ao último seguindo os critérios,
