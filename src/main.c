@@ -1139,7 +1139,9 @@ EstadoJogo LoopJogo()
                     else if(!(player.isVivo))
                     {
                         // Player morreu
-                        player.score.tempoVivo += timerNivel;
+                        timerTotal += timerNivel;
+                        player.score.tempoVivo = timerTotal;
+                        player.score.faseCompletada = mapaAtual - 1;
                         timerNivel = 0.0f;
                         playerGanhou = 0;
                         estadoInterno = ENCERRAMENTO;
@@ -1376,18 +1378,18 @@ EstadoJogo LoopJogo()
                     {
                         DrawText("VOCE VENCEU!", TELA_LARGURA/2 - MeasureText("VOCE VENCEU!", 50)/2,
                                 TELA_ALTURA/4 - 30, 50, GREEN);
-                        DrawText(TextFormat("Tempo sobrevivido: %.2f segundos", player.score.tempoVivo),
+                        DrawText(TextFormat("Tempo total: %.2f segundos", player.score.tempoVivo),
                                 TELA_LARGURA/2 - 150, TELA_ALTURA/4 + 40, 20, LIGHTGRAY);
-                        DrawText(TextFormat("Fase final: %d", player.score.faseCompletada),
+                        DrawText(TextFormat("Ultima fase concluida: %d", player.score.faseCompletada),
                                 TELA_LARGURA/2 - 100, TELA_ALTURA/4 + 70, 20, LIGHTGRAY);
                     }
                     else
                     {
                         DrawText("VOCE MORREU!", TELA_LARGURA/2 - MeasureText("VOCE MORREU!", 50)/2,
                                 TELA_ALTURA/4 - 30, 50, RED);
-                        DrawText(TextFormat("Tempo sobrevivido: %.2f segundos", player.score.tempoVivo),
+                        DrawText(TextFormat("Tempo total: %.2f segundos", player.score.tempoVivo),
                                 TELA_LARGURA/2 - 150, TELA_ALTURA/4 + 40, 20, LIGHTGRAY);
-                        DrawText(TextFormat("Fase final: %d", player.score.faseCompletada),
+                        DrawText(TextFormat("Ultima fase concluida: %d", player.score.faseCompletada),
                                 TELA_LARGURA/2 - 100, TELA_ALTURA/4 + 70, 20, LIGHTGRAY);
                     }
 
