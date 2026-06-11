@@ -374,7 +374,7 @@ int DevolverMaiorScore(Score score1, Score score2);
 
 // ## A fazer:
 // Função para carregar scores de um arquivo binário para um array de tipo Score com tamanho SCORE_ARRAY_MAX
-void CarregarPlacar(Score placar[SCORE_ARRAY_MAX]);
+int CarregarPlacar(Score placar[SCORE_ARRAY_MAX]);
 
 // ## A fazer:
 // Função que recebe um array de tipo Score com tamanho SCORE_ARRAY_MAX e ordena ele de melhor a pior, seguindo a lógica:
@@ -383,7 +383,7 @@ void OrdenarPlacar(Score placar[SCORE_ARRAY_MAX]);
 
 // ## A fazer:
 // Função que salva um array de tipo Score com tamanho SCORE_ARRAY_MAX em um arquivo binário
-void SalvarPlacar(Score placar[SCORE_ARRAY_MAX]);
+int SalvarPlacar(Score placar[SCORE_ARRAY_MAX]);
 
 
 // ==================================================
@@ -660,17 +660,43 @@ int DevolverMaiorScore(Score score1, Score score2)
     }
 }
 
-void CarregarPlacar(Score placar[SCORE_ARRAY_MAX])
+int CarregarPlacar(Score placar[SCORE_ARRAY_MAX])
 {
+    FILE *arquivo = fopen(SCORE_NOME_ARQUIVO, "rb");
 
+    // Verificando se abriu o arquivo
+    if(!arquivo)
+        return 0;
+
+    // Percorrer o array, salvando nele os dados contidos no arquivo
+    for(int i = 0; i < SCORE_ARRAY_MAX; i++)
+    {
+        
+    }
+
+    fclose(arquivo);
+    return 1;
 }
 void OrdenarPlacar(Score placar[SCORE_ARRAY_MAX])
 {
 
 }
-void SalvarPlacar(Score placar[SCORE_ARRAY_MAX])
+int SalvarPlacar(Score placar[SCORE_ARRAY_MAX])
 {
+    FILE *arquivo = fopen(SCORE_NOME_ARQUIVO, "wb");
 
+    // Verificando se abriu o arquivo
+    if(!arquivo)
+        return 0;
+
+    // Percorrer o array e salvar cada valor no arquivo
+    for(int i = 0; i < SCORE_ARRAY_MAX; i++)
+    {
+        
+    }
+
+    fclose(arquivo);
+    return 1;
 }
 
 void CarregarMapa(int numeroFase, char mapa[MAPA_X][MAPA_Y])
