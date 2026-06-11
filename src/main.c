@@ -530,13 +530,17 @@ void CarregarMapa(int numeroFase, char mapa[MAPA_X][MAPA_Y])
     char nomeMapaInicio[] = "mapa";
     char nomeMapaFim[] = ".txt";
     char nomeMapa[10];                  // {'m', 'a', 'p', 'a', 'N', '.', 't', 'x', 't', '\0'}
+    char basePath[256] = {0};
+
     snprintf(nomeMapa, sizeof(nomeMapa), "%s%d%s", nomeMapaInicio, numeroFase, nomeMapaFim);
+    strcpy(basePath, GetApplicationDirectory());  // Raylib fornece o diretório do executável
+    strcat(basePath, nomeMapa);
 
     // Buffer para uma linha do arquivo: MAPA_X caracteres + '\n' + '\0'
     char linha[MAPA_X + 2];
     int lin = 0;         // índice da linha atual no arquivo (0 a MAPA_Y-1)
 
-    FILE *arquivo = fopen(nomeMapa, "r");
+    FILE *arquivo = fopen(basePath, "r");
     if (!arquivo) {
         // Em caso de erro, preenche toda a matriz com espaços
         for (int col = 0; col < MAPA_X; col++)
@@ -1040,11 +1044,11 @@ EstadoJogo LoopJogo()
     EstadoJogo estado = MENU; // valor inicial seguro
     EstadoJogoInterno estadoInterno = CARREGAMENTO;
 
-    Player player = GetPlayerPadrao();
-    Inimigos inimigos = GetInimigosPadrao();
-    Plataformas plataformas = GetPlataformasPadrao();
-    Escadas escadas = GetEscadasPadrao();
-    Portal portal = GetPortalPadrao();
+    Player player;
+    Inimigos inimigos;
+    Plataformas plataformas;
+    Escadas escadas;
+    Portal portal;
 
     int mapaAtual = 0;
     char mapa[MAPA_X][MAPA_Y];
@@ -1070,10 +1074,18 @@ EstadoJogo LoopJogo()
         {
             case CARREGAMENTO:
             {
+                player = GetPlayerPadrao();
+                inimigos = GetInimigosPadrao();
+                plataformas = GetPlataformasPadrao();
+                escadas = GetEscadasPadrao();
+                portal = GetPortalPadrao();
+
                 CarregarMapa(mapaAtual, mapa);
                 MatrizParaStructs(mapa, &player, &inimigos, &plataformas, &escadas, &portal);
+
                 timerNivel = 0.0f;
                 estadoInterno = JOGANDO;
+
                 break;
             }
             case JOGANDO:
@@ -1081,7 +1093,7 @@ EstadoJogo LoopJogo()
                 float deltaTime = GetFrameTime();
 
                 // Controle de pausa
-                if (IsKeyPressed(KEY_ESCAPE))
+                if (IsKeyPressed(KEY_P))
                 {
                     isPausado = !isPausado;
                     opcaoPause = 0;
