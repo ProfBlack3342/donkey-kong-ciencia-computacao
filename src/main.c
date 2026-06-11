@@ -372,14 +372,17 @@ int DevolverMaiorScore(Score score1, Score score2);
 // Funções que lidam com o placar (array de score com tamanho SCORE_ARRAY_MAX)
 // ==================================================
 
-// A fazer: Função para carregar scores de um arquivo binário para um array de tipo Score com tamanho SCORE_ARRAY_MAX
+// ## A fazer:
+// Função para carregar scores de um arquivo binário para um array de tipo Score com tamanho SCORE_ARRAY_MAX
 void CarregarPlacar(Score placar[SCORE_ARRAY_MAX]);
 
-// A fazer: Função que recebe um array de tipo Score com tamanho SCORE_ARRAY_MAX e ordena ele de melhor a pior, seguindo a lógica:
+// ## A fazer:
+// Função que recebe um array de tipo Score com tamanho SCORE_ARRAY_MAX e ordena ele de melhor a pior, seguindo a lógica:
 // 1º - Maior Fase Alcancada > 2º - Menor Tempo Total
 void OrdenarPlacar(Score placar[SCORE_ARRAY_MAX]);
 
-// A fazer: Função que salva um array de tipo Score com tamanho SCORE_ARRAY_MAX em um arquivo binário
+// ## A fazer:
+// Função que salva um array de tipo Score com tamanho SCORE_ARRAY_MAX em um arquivo binário
 void SalvarPlacar(Score placar[SCORE_ARRAY_MAX]);
 
 
