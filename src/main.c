@@ -176,6 +176,7 @@
 // Enums
 //----------------------------------------------------------------------------------
 
+// Enumerador que define os estados da máquina de estado principal
 typedef enum enum_estado_jogo {
     MENU,
     SCORE,
@@ -183,6 +184,7 @@ typedef enum enum_estado_jogo {
     FIM
 } EstadoJogo;
 
+// Enumerador que define os estados da máquina de estado interna do jogo
 typedef enum enum_estado_jogo_interno {
     CARREGAMENTO,
     JOGANDO,
@@ -193,17 +195,21 @@ typedef enum enum_estado_jogo_interno {
 //----------------------------------------------------------------------------------
 // Structs
 //----------------------------------------------------------------------------------
+
+// Estrutura que armazena os dados relativos a um score
 typedef struct struct_score {
     char nome[SCORE_NOME_MAX];
     float tempoVivo;
     int faseCompletada;
 } Score;
 
+// Estrutura que armazena os dados relativos a posição de um elemento do mapa
 typedef struct struct_posicao {
     float x;
     float y;
 } Posicao;
 
+// Estrutura que armazena os dados relativos ao player no mapa
 typedef struct struct_player {
     Score score;
     Posicao posicao;
@@ -216,6 +222,7 @@ typedef struct struct_player {
     Color cor;
 } Player;
 
+// Estrutura que armazena os dados relativos a um inimigo no mapa
 typedef struct struct_inimigo {
     Posicao posicao;
     float velocidade;
@@ -225,11 +232,13 @@ typedef struct struct_inimigo {
     Color cor;
 } Inimigo;
 
+// Estrutura que armazena os dados relativos a todos os inimigos no mapa
 typedef struct struct_inimigos {
     Inimigo inimigo[INIMIGO_MAX];
     int quantInimigos;
 } Inimigos;
 
+// Estrutura que armazena os dados relativos a uma plataforma do mapa
 typedef struct struct_plataforma {
     Posicao posicao;
     float altura;
@@ -237,14 +246,17 @@ typedef struct struct_plataforma {
     Color cor;
 } Plataforma;
 
+// Estrutura que armazena os dados relativos a todas as plataformas do mapa
 typedef struct struct_plataformas {
     Plataforma plataforma[PLATAFORMA_MAX];
     int quantPlataformas;
 } Plataformas;
 
+// Estrutura que armazena os dados relativos a uma parte de cima de escada
 // Declaração Antecipada por ser variável de EscadaBaixo
 typedef struct struct_escada_cima EscadaCima;
 
+// Estrutura que armazena os dados relativos a uma parte de baixo de escada
 typedef struct struct_escada_baixo {
     Posicao posicao;
     EscadaCima *escadaCima;
@@ -253,6 +265,7 @@ typedef struct struct_escada_baixo {
     Color cor;
 } EscadaBaixo;
 
+// Estrutura que armazena os dados relativos a uma parte do meio de escada
 typedef struct struct_escada_meio {
     Posicao posicao;
     float altura;
@@ -260,6 +273,7 @@ typedef struct struct_escada_meio {
     Color cor;
 } EscadaMeio;
 
+// Estrutura que armazena os dados relativos a uma parte de cima de escada
 // Definição da struct declarada anteriormente
 struct struct_escada_cima {
     Posicao posicao;
@@ -269,6 +283,7 @@ struct struct_escada_cima {
     Color cor;
 };
 
+// Estrutura que armazena os dados relativos a todas as escadas do mapa
 typedef struct struct_escadas {
     EscadaBaixo escadaBaixo[ESCADA_BAIXO_MAX];
     int quantEscadasBaixo;
@@ -278,6 +293,7 @@ typedef struct struct_escadas {
     int quantEscadasCima;
 } Escadas;
 
+// Estrutura que armazena os dados relativos ao portal no mapa
 typedef struct struct_portal {
     Posicao posicao;
     float altura;
@@ -651,7 +667,7 @@ void OrdenarPlacar(Score placar[SCORE_ARRAY_MAX])
 }
 void SalvarPlacar(Score placar[SCORE_ARRAY_MAX])
 {
-    
+
 }
 
 void CarregarMapa(int numeroFase, char mapa[MAPA_X][MAPA_Y])
