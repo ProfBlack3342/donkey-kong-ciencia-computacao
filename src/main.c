@@ -112,7 +112,7 @@
 // Mapa
 #define MAPA_X 30
 #define MAPA_Y 30
-#define MAPA_MAX 4
+#define MAPA_MAX 5
 
 // Score
 #define PLACAR_NOME_MAX 20
