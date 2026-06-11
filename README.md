@@ -13,12 +13,46 @@ Algoritmos e Programação - 2026/1
 - Melchior Neto
 
 ## Como compilar (VSCode)
-*Nota* Precisa ter um compilador de C instalado e configurado no VSCode
 
+### Windows
+#### Instalação do Compilador:
+1. Baixar e extrair a ultima versão de https://github.com/skeeto/w64devkit/releases em algum local de fácil acesso
+- (Uma dica é colocar em C:\Tools)
+2. Apertar as teclas "Win + R", digitar "sysdm.cpl" e apertar "Enter"
+3. Aba "Avançado", Opcão "Variáveis de Ambiente"
+4. Na caixa Variáveis do sistema, apertar na variável "Path" e na opção "Editar..."
+5. Selecionar a opção "Novo", e digitar o caminho para a pasta bin do arquivo que você baixou
+- (Se você extraiu em "C:\Tools", o caminho será "C:\Tools\w64devkit\bin")
+6. Apertar em "Ok" em todas as janelas até todas encerrarem
+- Se quiser testar a instalação, abra um terminal e digite "gcc --version"
+
+#### Configuração do Visual Studio Code:
+1. Abrir VSCode
+2. Instalar a extensão "C/C++ Extension Pack" da Microsoft
+3. Aperte as teclas "Ctrl + Shift + P", ache a opção "C/C++: Edit Configurations (UI)" e a selecione
+4. Na janela que for aberta, ache a seção "Compiler Path" e coloque o caminho para o compilador GCC do arquivo anterior
+- (Se ele foi extraido em "C:\Tools", o caminho será "C:\Tools\w64devkit\bin\gcc.exe")
+5. Ache a seção "IntelliSense mode" e altere para "windows-gcc-x64"
+
+#### Configuração do Raylib-Quickstart
+1. Certifique-se que a pasta do projeto está em um caminho com pastas que não tenham espaço no nome
+2. Abra a pasta do projeto no VSCode
+3. Navegue na pasta .vscode e abra o arquivo tasks.json
+4. Modifique todos os campos com o formato "windows": { "command": "..." } para que tenham o caminho para o executável "mingw32-make.exe"
+- (Se você instalou o "w64devkit" em "C:\Tools", o caminho será "C:\\Tools\\w64devkit\\bin\\mingw32-make.exe")
+5. Salve e feche o arquivo
+6. Reinicie o VSCode
+7. Abra o arquivo main.c
+8. Aperte F5 e espere o processo concluir
+9. Feche o jogo e copie/mova os arquivos dos mapas e scores para a pasta bin\Debug DENTRO DO PROJETO
+10. Aperte F5 novamente e aproveite o jogo!
+
+### Linux
 1. Abrir a pasta do jogo no VSCode
-2. Copiar ou mover arquivos binários de score e de texto dos mapas para o local aonde será compilado o executável
-3. Mandar compilar ( CTRL+SHIFT+B ou F5 )
-4. Pronto!
+2. Abrir o arquivo main.c
+3. Aperte F5 e espere o processo concluir
+4. Feche o jogo e copie/mova os arquivos dos mapas e scores para a pasta bin\Debug DENTRO DO PROJETO
+5. Aperte F5 novamente e aproveite o jogo!
 
 # Descrição do Programa
 O programa é dividido em 3 loops principais, que são controlados por uma máquina de estado presente no main:
