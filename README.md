@@ -16,8 +16,9 @@ Algoritmos e Programação - 2026/1
 *Nota* Precisa ter um compilador de C instalado e configurado no VSCode
 
 1. Abrir a pasta do jogo no VSCode
-2. Mandar compilar ( CTRL+SHIFT+B ou F5 )
-3. Pronto!
+2. Copiar ou mover arquivos binários de score e de texto dos mapas para o local aonde será compilado o executável
+3. Mandar compilar ( CTRL+SHIFT+B ou F5 )
+4. Pronto!
 
 # Descrição do Programa
 O programa é dividido em 3 loops principais, que são controlados por uma máquina de estado presente no main:
