@@ -71,12 +71,14 @@ Um loop que carrega e exibe os scores salvos em um arquivo binário. Possui some
 ## Loop do Jogo
 De longe a parte mais complexa do programa, possui uma máquina de estado interna que o divide em 3 grandes áreas:
 
-### CARREGAMENTO
-Carrega o mapa a partir do arquivo de texto correspondente e atribui a posição para cada struct. Depois, muda o estado interno para JOGANDO
+### Carregamento do Mapa
+Carrega o mapa a partir do arquivo de texto correspondente e atribui a posição para cada struct. Depois, muda o estado interno para a execução do jogo.
 
-### JOGANDO
+### Execução do Jogo
+Leitura de inputs do Player, simulação de física e interações do Player e Inimigos, desenho do jogo e do menu de pause quando receber input para tal. Pode encerrar o loop do jogo pelo menu de pausa, ou carregar o proximo mapa
 
-### ENCERRAMENTO
+### Encerramento do Jogo
+Exibição da tela de vitória ou derrota, verificação do score do jogador e salvamento do mesmo se for melhor que o último dos scores salvos. Pode encerrar o loop do jogo ou retornar ao carregamento do mapa
 
 # Licenças
 Raylib-Quickstart por Jeffery Myers está marcada como CC0 1.0. Para ver uma cópia, visite https://creativecommons.org/publicdomain/zero/1.0/
