@@ -1432,6 +1432,7 @@ EstadoJogo LoopJogo()
                             portal = GetPortalPadrao();
                             mapaAtual = 0;
                             timerNivel = 0.0f;
+                            timerTotal = 0.0f;
                             playerGanhou = 0;
                             estadoInterno = CARREGAMENTO;
                             loopJogo = 1;          // continua o loop principal do jogo
