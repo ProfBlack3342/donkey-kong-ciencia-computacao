@@ -94,6 +94,7 @@
     • O jogo deve funcionar corretamente mesmo com modificacoes externas nos arquivos de mapa (leitura dinamica).
 */
 
+
 //----------------------------------------------------------------------------------
 // Bibliotecas
 //----------------------------------------------------------------------------------
@@ -105,6 +106,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 //----------------------------------------------------------------------------------
 // Constantes
 //----------------------------------------------------------------------------------
@@ -115,8 +117,9 @@
 #define MAPA_MAX 5
 
 // Score
-#define PLACAR_NOME_MAX 20
-#define PLACAR_MAX 10
+#define SCORE_NOME_MAX 20
+#define SCORE_ARRAY_MAX 10
+#define SCORE_NOME_ARQUIVO "placar.bin"
 
 // Player
 #define PLAYER_VELOCIDADE_HORIZONTAL 150.0f
@@ -168,9 +171,11 @@
 // Simulação de Gravidade para Pulo/Queda do Player e Inimigos
 #define GRAVIDADE 400.0f
 
+
 //----------------------------------------------------------------------------------
 // Enums
 //----------------------------------------------------------------------------------
+
 typedef enum enum_estado_jogo {
     MENU,
     SCORE,
@@ -184,11 +189,12 @@ typedef enum enum_estado_jogo_interno {
     ENCERRAMENTO
 } EstadoJogoInterno;
 
+
 //----------------------------------------------------------------------------------
 // Structs
 //----------------------------------------------------------------------------------
 typedef struct struct_score {
-    char nome[PLACAR_NOME_MAX];
+    char nome[SCORE_NOME_MAX];
     float tempoVivo;
     int faseCompletada;
 } Score;
@@ -279,50 +285,142 @@ typedef struct struct_portal {
     Color cor;
 } Portal;
 
+
 //----------------------------------------------------------------------------------
 // Funções
 //----------------------------------------------------------------------------------
 
-// Funções para criação padronizada de estruturas
-// Struct devem ser criadas SEMPRE com o uso dessas funções, para evitar erros
+// ==================================================
+// Funções que inicializam as estruturas
+// ==================================================
+
+// Função para criação padronizada da estrutura Score
+// Struct deste tipo devem ser criadas SEMPRE com o uso dessas funções, para evitar erros
 Score GetScorePadrao();
+
+// Função para criação padronizada da estrutura Posicao
+// Struct deste tipo devem ser criadas SEMPRE com o uso dessas funções, para evitar erros
 Posicao GetPosicaoPadrao();
+
+// Função para criação padronizada da estrutura Player
+// Struct deste tipo devem ser criadas SEMPRE com o uso dessas funções, para evitar erros
 Player GetPlayerPadrao();
+
+// Função para criação padronizada da estrutura Inimigo
+// Struct deste tipo devem ser criadas SEMPRE com o uso dessas funções, para evitar erros
 Inimigo GetInimigoPadrao();
+
+// Função para criação padronizada da estrutura Inimigos
+// Struct deste tipo devem ser criadas SEMPRE com o uso dessas funções, para evitar erros
 Inimigos GetInimigosPadrao();
+
+// Função para criação padronizada da estrutura Plataforma
+// Struct deste tipo devem ser criadas SEMPRE com o uso dessas funções, para evitar erros
 Plataforma GetPlataformaPadrao();
+
+// Função para criação padronizada da estrutura Plataformas
+// Struct deste tipo devem ser criadas SEMPRE com o uso dessas funções, para evitar erros
 Plataformas GetPlataformasPadrao();
+
+// Função para criação padronizada da estrutura EscadaBaixo
+// Struct deste tipo devem ser criadas SEMPRE com o uso dessas funções, para evitar erros
 EscadaBaixo GetEscadaBaixoPadrao();
+
+// Função para criação padronizada da estrutura EscadaMeio
+// Struct deste tipo devem ser criadas SEMPRE com o uso dessas funções, para evitar erros
 EscadaMeio GetEscadaMeioPadrao();
+
+// Função para criação padronizada da estrutura EscadaCima
+// Struct deste tipo devem ser criadas SEMPRE com o uso dessas funções, para evitar erros
 EscadaCima GetEscadaCimaPadrao();
+
+// Função para criação padronizada da estrutura Escadas
+// Struct deste tipo devem ser criadas SEMPRE com o uso dessas funções, para evitar erros
 Escadas GetEscadasPadrao();
+
+// Função para criação padronizada da estrutura Portal
+// Struct deste tipo devem ser criadas SEMPRE com o uso dessas funções, para evitar erros
 Portal GetPortalPadrao();
 
-// Funções para carregar o mapa
-// Arquivo de Texto -> Matriz -> Structs
+
+// ==================================================
+// Funções que lidam com score
+// ==================================================
+
+// Função para comparar 2 scores e devolver qual é maior pela lógica:
+// 1º - Maior Fase Alcancada > 2º - Menor Tempo Total
+int DevolverMaiorScore(Score score1, Score score2);
+
+
+// ==================================================
+// Funções que lidam com o placar (array de score com tamanho SCORE_ARRAY_MAX)
+// ==================================================
+
+// A fazer: Função para carregar scores de um arquivo binário para um array de tipo Score com tamanho SCORE_ARRAY_MAX
+void CarregarPlacar(Score placar[SCORE_ARRAY_MAX]);
+
+// A fazer: Função que recebe um array de tipo Score com tamanho SCORE_ARRAY_MAX e ordena ele de melhor a pior, seguindo a lógica:
+// 1º - Maior Fase Alcancada > 2º - Menor Tempo Total
+void OrdenarPlacar(Score placar[SCORE_ARRAY_MAX]);
+
+// A fazer: Função que salva um array de tipo Score com tamanho SCORE_ARRAY_MAX em um arquivo binário
+void SalvarPlacar(Score placar[SCORE_ARRAY_MAX]);
+
+
+// ==================================================
+// Funções que lidam com o mapa
+// ==================================================
+
+// Função que carrega um mapa de um arquivo de texto
 void CarregarMapa(int numeroFase, char mapa[MAPA_X][MAPA_Y]);
+
+// Função que percorre um array de duas dimensões que armazena um mapa,
+// atribuindo a posição de cada elemento para sua estrutura correspondente
 void MatrizParaStructs(char mapa[MAPA_X][MAPA_Y], Player *player, Inimigos *inimigos, Plataformas *plataformas, Escadas *escadas, Portal *portal);
 
-// Funções para lidar com a movimentação e colisão do Player e Inimigos
+
+// ==================================================
+// Funções que lidam com a atualização do Player e Inimigos
 // Feitas com a ajuda do DeepSeek, pq meu deus eu odeio física, e a física me odeia
+// ==================================================
+
+// Função que recebe um ponto, percorre todas as plataformas e
+// tenta identificar se o ponto colide com alguma delas
 int PontoSobrePlataforma(float x, float y, Plataformas *plataformas);
+
+// Atualiza o Player, simulando:
+// - Movimentação horizontal com colisão
+// - Verificação de chão para pulo
+// - Gravidade e colisão
+// - Interação com Escadas e Portais
+// - Interação com Inimigos
 void AtualizarPlayer(Player *player, Plataformas *plataformas, Inimigos *inimigos, Escadas *escadas, Portal *portal, float delta);
+
+// Atualiza o Inimigo, simulando:
+// - Detecção de borda da plataforma
+// - Movimentação horizontal com colisão
+// - Gravidade e colisão
 void AtualizarInimigos(Inimigos *inimigos, Plataformas *plataformas, float delta);
 
-// A fazer: Função para carregar scores de um arquivo binário para um vetor de PLACAR_MAX scores
-// A fazer: Função para comparar scores por lógica própria e devolver o maior (1º: Maior fase, 2º Menor tempo)
-// A fazer: Função que recebe um vetor de scores e ordena ele de melhor a pior, seguindo a lógica anterior
-// A fazer: Função que salva um vetor de PLACAR_MAX scores em um arquivo binário
+// ==================================================
+// Funções para os diferentes loops de tela
+// ==================================================
 
-// Funções para os diferentes loops de tela: Menu, Score e Jogo
-// Quando encerram, retornam o próximo estado a ser desenhado
+// Função que desenha o menu principal e recebe o input do usuário
 EstadoJogo LoopMenu();
+
+// Função que desenha o placar de scores mais altos
 EstadoJogo LoopScore();
+
+// Função que simula o jogo em si, funciona com uma máquina de estado interna
 EstadoJogo LoopJogo();
+
 
 //----------------------------------------------------------------------------------
 // Função Main
 //----------------------------------------------------------------------------------
+
+// Inicializa variáveis do Raylib e a máquina de estado principal do jogo
 int main(void)
 {
     // Inicializando o estado do jogo
@@ -363,6 +461,7 @@ int main(void)
 
     return 0;
 }
+
 
 //----------------------------------------------------------------------------------
 // Definições de Funções
@@ -523,6 +622,36 @@ Portal GetPortalPadrao()
     };
 
     return portalPadrao;
+}
+
+int DevolverMaiorScore(Score score1, Score score2)
+{
+    if(score1.faseCompletada > score2.faseCompletada)
+        return 1;
+    else if(score1.faseCompletada < score2.faseCompletada)
+        return 2;
+    else
+    {
+        if(score1.tempoVivo < score2.tempoVivo)
+            return 1;
+        else if(score1.tempoVivo > score2.tempoVivo)
+            return 2;
+        else    // Caso milagroso aonde tanto a fase quanto o tempo dos dois são iguais
+            return 0;
+    }
+}
+
+void CarregarPlacar(Score placar[SCORE_ARRAY_MAX])
+{
+
+}
+void OrdenarPlacar(Score placar[SCORE_ARRAY_MAX])
+{
+
+}
+void SalvarPlacar(Score placar[SCORE_ARRAY_MAX])
+{
+    
 }
 
 void CarregarMapa(int numeroFase, char mapa[MAPA_X][MAPA_Y])
@@ -1050,6 +1179,8 @@ EstadoJogo LoopJogo()
     Escadas escadas;
     Portal portal;
 
+    Score placar[SCORE_ARRAY_MAX];
+
     int mapaAtual = 0;
     char mapa[MAPA_X][MAPA_Y];
 
@@ -1080,6 +1211,8 @@ EstadoJogo LoopJogo()
                 plataformas = GetPlataformasPadrao();
                 escadas = GetEscadasPadrao();
                 portal = GetPortalPadrao();
+
+                CarregarPlacar(placar);
 
                 CarregarMapa(mapaAtual, mapa);
                 MatrizParaStructs(mapa, &player, &inimigos, &plataformas, &escadas, &portal);
