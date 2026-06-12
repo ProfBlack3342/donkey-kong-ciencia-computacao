@@ -69,8 +69,7 @@
 
     • A interacao do jogador com o jogo se da ao pressionar teclas especıficas. As acoes e teclas sao as seguintes:
 
-        Tecla                   -   Acao
-
+        * Tecla *               - * Acao *
         ← / → ou (’A’ / ’D’)    -   Movimento horizontal
         ↑ ou (’W’)              -   Subir escada
         ↓ ou (’S’)              -   Descer escada
@@ -80,15 +79,14 @@
       e permitindo posterior volta a partir do mesmo ponto e mesmas condicoes.
       O menu de pausa deve possuir ao menos as seguintes opcoes:
 
-        Opcao                   -   Significado
-
+        * Opcao *               - * Significado *
         Continuar               -   Retoma o jogo do ponto em que foi pausado
         Voltar ao menu          -   Retorna ao menu principal
         Sair                    -   Fecha o jogo
 
     • O jogador nao deve atravessar plataformas e nem caminhar fora de plataformas.
     • Os inimigos devem se movimentar sobre as plataformas sem atravessar obstaculos.
-    • Ao colidir com inimigos, isto ´e, quando o jogador se encontrar na mesma posic¸ao que o inimigo,
+    • Ao colidir com inimigos, isto é, quando o jogador se encontrar na mesma posicao que o inimigo,
       o jogo deve reiniciar (ou consumir vida, caso implementado como extra).
     • O jogo deve possuir sistema de ranking baseado em tempo ou pontuacao.
     • O jogo deve funcionar corretamente mesmo com modificacoes externas nos arquivos de mapa (leitura dinamica).
@@ -482,7 +480,7 @@ int main(void)
                 estado = LoopScore();
                 break;
             case JOGO:
-                // Jogo rodando, pode voltar ao menu ou ir para o fim
+                // Jogo rodando, pode voltar ao menu ou fim
                 estado = LoopJogo();
                 break;
             case FIM:
@@ -1276,44 +1274,44 @@ EstadoJogo LoopScore()
         }
 
         BeginDrawing();
-        ClearBackground(DARKPURPLE);
+            ClearBackground(DARKPURPLE);
 
-        // Título
-        DrawText("HIGH SCORES", TELA_LARGURA/2 - MeasureText("HIGH SCORES", 40)/2, 30, 40, WHITE);
+            // Título
+            DrawText("HIGH SCORES", TELA_LARGURA/2 - MeasureText("HIGH SCORES", 40)/2, 30, 40, WHITE);
 
-        // Cabeçalho da tabela
-        int yBase = 100;
-        DrawText("Pos", 80, yBase, 25, YELLOW);
-        DrawText("Nome", 160, yBase, 25, YELLOW);
-        DrawText("Fase", 400, yBase, 25, YELLOW);
-        DrawText("Tempo (s)", 480, yBase, 25, YELLOW);
+            // Cabeçalho da tabela
+            int yBase = 100;
+            DrawText("Pos", 80, yBase, 25, YELLOW);
+            DrawText("Nome", 160, yBase, 25, YELLOW);
+            DrawText("Fase", 400, yBase, 25, YELLOW);
+            DrawText("Tempo (s)", 480, yBase, 25, YELLOW);
 
-        // Linhas do placar
-        for (int i = 0; i < SCORE_ARRAY_MAX; i++)
-        {
-            int y = yBase + 35 + i * 30;
-            Color cor = (i == 0) ? GOLD : (i == 1) ? LIGHTGRAY : (i == 2) ? BROWN : DARKGRAY;
+            // Linhas do placar
+            for (int i = 0; i < SCORE_ARRAY_MAX; i++)
+            {
+                int y = yBase + 35 + i * 30;
+                Color cor = (i == 0) ? GOLD : (i == 1) ? LIGHTGRAY : (i == 2) ? BROWN : DARKGRAY;
 
-            // Posição
-            DrawText(TextFormat("%d", i + 1), 80, y, 20, cor);
+                // Posição
+                DrawText(TextFormat("%d", i + 1), 80, y, 20, cor);
 
-            // Nome (truncado se necessário)
-            char nomeExibicao[SCORE_NOME_MAX + 1];
-            strncpy(nomeExibicao, placar[i].nome, SCORE_NOME_MAX);
-            nomeExibicao[SCORE_NOME_MAX] = '\0';
-            DrawText(nomeExibicao, 160, y, 20, cor);
+                // Nome (truncado se necessário)
+                char nomeExibicao[SCORE_NOME_MAX + 1];
+                strncpy(nomeExibicao, placar[i].nome, SCORE_NOME_MAX);
+                nomeExibicao[SCORE_NOME_MAX] = '\0';
+                DrawText(nomeExibicao, 160, y, 20, cor);
 
-            // Fase completada
-            DrawText(TextFormat("%d", placar[i].faseCompletada + 1), 400, y, 20, cor);
+                // Fase completada
+                DrawText(TextFormat("%d", placar[i].faseCompletada + 1), 400, y, 20, cor);
 
-            // Tempo total (com duas casas decimais)
-            DrawText(TextFormat("%.2f", placar[i].tempoVivo), 480, y, 20, cor);
-        }
+                // Tempo total (com duas casas decimais)
+                DrawText(TextFormat("%.2f", placar[i].tempoVivo), 480, y, 20, cor);
+            }
 
-        // Instrução de retorno
-        DrawText("Pressione V para voltar ao menu",
-                 TELA_LARGURA/2 - MeasureText("Pressione V para voltar ao menu", 20)/2,
-                 TELA_ALTURA - 50, 20, LIGHTGRAY);
+            // Instrução de retorno
+            DrawText("Pressione V para voltar ao menu",
+                    TELA_LARGURA/2 - MeasureText("Pressione V para voltar ao menu", 20)/2,
+                    TELA_ALTURA - 50, 20, LIGHTGRAY);
 
         EndDrawing();
     }
