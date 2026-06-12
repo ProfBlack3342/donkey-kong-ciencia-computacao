@@ -105,6 +105,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 
 //----------------------------------------------------------------------------------
@@ -117,7 +118,7 @@
 #define MAPA_MAX 5
 
 // Score
-#define SCORE_NOME_MAX 20
+#define SCORE_NOME_MAX 21
 #define SCORE_ARRAY_MAX 10
 #define SCORE_NOME_ARQUIVO "placar.bin"
 
@@ -300,6 +301,8 @@ typedef struct struct_portal {
     float comprimento;
     Color cor;
 } Portal;
+
+
 
 
 //----------------------------------------------------------------------------------
@@ -496,7 +499,7 @@ Score GetScorePadrao()
 {
     Score scorePadrao = {
         {"Mario"},
-        0,
+        360.0f,
         -1
     };
 
@@ -727,7 +730,7 @@ int SalvarPlacar(Score placar[])
     strcpy(caminhoPlacar, GetApplicationDirectory());  // Raylib fornece o diretório do executável
     strcat(caminhoPlacar, SCORE_NOME_ARQUIVO);
 
-    FILE *arquivo = fopen(SCORE_NOME_ARQUIVO, "wb");
+    FILE *arquivo = fopen(caminhoPlacar, "wb");
     // Verificando se abriu o arquivo
     if(!arquivo)
         return 0;
@@ -1247,10 +1250,68 @@ EstadoJogo LoopMenu()
 EstadoJogo LoopScore()
 {
     EstadoJogo estado = MENU;
+    Score placar[SCORE_ARRAY_MAX];
 
-    // Ainda será feito/implementado
-    // FILE *arquivo;
-    // fclose(arquivo);
+    // Carrega o placar do arquivo binário; se falhar, inicializa com valores padrão
+    if (!CarregarPlacar(placar))
+    {
+        for (int i = 0; i < SCORE_ARRAY_MAX; i++)
+        {
+            placar[i] = GetScorePadrao();
+        }
+    }
+
+    while (!WindowShouldClose())
+    {
+        // Volta ao menu com Enter ou ESC
+        if (IsKeyPressed(KEY_V))
+        {
+            estado = MENU;
+            break;
+        }
+
+        BeginDrawing();
+        ClearBackground(DARKPURPLE);
+
+        // Título
+        DrawText("HIGH SCORES", TELA_LARGURA/2 - MeasureText("HIGH SCORES", 40)/2, 30, 40, WHITE);
+
+        // Cabeçalho da tabela
+        int yBase = 100;
+        DrawText("Pos", 80, yBase, 25, YELLOW);
+        DrawText("Nome", 160, yBase, 25, YELLOW);
+        DrawText("Fase", 400, yBase, 25, YELLOW);
+        DrawText("Tempo (s)", 480, yBase, 25, YELLOW);
+
+        // Linhas do placar
+        for (int i = 0; i < SCORE_ARRAY_MAX; i++)
+        {
+            int y = yBase + 35 + i * 30;
+            Color cor = (i == 0) ? GOLD : (i == 1) ? LIGHTGRAY : (i == 2) ? BROWN : DARKGRAY;
+
+            // Posição
+            DrawText(TextFormat("%d", i + 1), 80, y, 20, cor);
+
+            // Nome (truncado se necessário)
+            char nomeExibicao[SCORE_NOME_MAX + 1];
+            strncpy(nomeExibicao, placar[i].nome, SCORE_NOME_MAX);
+            nomeExibicao[SCORE_NOME_MAX] = '\0';
+            DrawText(nomeExibicao, 160, y, 20, cor);
+
+            // Fase completada
+            DrawText(TextFormat("%d", placar[i].faseCompletada + 1), 400, y, 20, cor);
+
+            // Tempo total (com duas casas decimais)
+            DrawText(TextFormat("%.2f", placar[i].tempoVivo), 480, y, 20, cor);
+        }
+
+        // Instrução de retorno
+        DrawText("Pressione V para voltar ao menu",
+                 TELA_LARGURA/2 - MeasureText("Pressione V para voltar ao menu", 20)/2,
+                 TELA_ALTURA - 50, 20, LIGHTGRAY);
+
+        EndDrawing();
+    }
 
     return estado;
 }
@@ -1273,6 +1334,7 @@ EstadoJogo LoopJogo()
     int loopJogo = 1;
     int isPausado = 0;
     int opcaoPause = 0;
+    int podeSalvarScore = 0;
 
     float timerNivel = 0.0f;
     float timerTotal = 0.0f;
@@ -1566,15 +1628,127 @@ EstadoJogo LoopJogo()
                 int opcaoFim = 0;
                 int escolhaFeita = 0;
 
+                // ---- VERIFICAÇÃO DE ELEGIBILIDADE DO SCORE ----
+                int comparacao = DevolverMaiorScore(player.score, placar[SCORE_ARRAY_MAX - 1]);
+                if (comparacao == 1 || comparacao == 0)   // player.score >= último placar
+                {
+                    podeSalvarScore = 1;
+                }
+                else
+                {
+                    podeSalvarScore = 0;
+                }
+
+                // Variáveis para controle da entrada do nome
+                char nomeBuffer[SCORE_NOME_MAX] = "";
+                int  nomeTamanho = 0;
+                bool modoSalvar = false;
+                bool nomeConfirmado = false;
+                bool nomeCancelado = false;
+
+                // Se o score merece ser salvo, ativa o modo de entrada de nome
+                if (podeSalvarScore)
+                {
+                    modoSalvar = true;
+                    nomeTamanho = 0;
+                    nomeBuffer[0] = '\0';
+                }
+
                 while (!WindowShouldClose() && !escolhaFeita)
                 {
-                    // ----- Navegação por teclado -----
+                    // ----- Modo de entrada do nome (sobrepõe tudo) -----
+                    if (modoSalvar)
+                    {
+                        // Processa caracteres pressionados
+                        int tecla = GetCharPressed();
+                        while (tecla > 0)
+                        {
+                            // Aceita apenas caracteres imprimíveis e limita ao tamanho máximo - 1
+                            if (isprint(tecla) && nomeTamanho < SCORE_NOME_MAX - 1)
+                            {
+                                nomeBuffer[nomeTamanho++] = (char)tecla;
+                                nomeBuffer[nomeTamanho] = '\0';
+                            }
+                            tecla = GetCharPressed();
+                        }
+
+                        // Backspace
+                        if (IsKeyPressed(KEY_BACKSPACE) && nomeTamanho > 0)
+                        {
+                            nomeTamanho--;
+                            nomeBuffer[nomeTamanho] = '\0';
+                        }
+
+                        // Enter – confirma o nome
+                        if (IsKeyPressed(KEY_ENTER))
+                        {
+                            // Se o nome ficou vazio, usa "Mario"
+                            if (nomeTamanho == 0)
+                            {
+                                strncpy(nomeBuffer, "Mario", SCORE_NOME_MAX - 1);
+                                nomeBuffer[SCORE_NOME_MAX - 1] = '\0';
+                            }
+                            // Copia o nome para o score do jogador
+                            strncpy(player.score.nome, nomeBuffer, SCORE_NOME_MAX - 1);
+                            player.score.nome[SCORE_NOME_MAX - 1] = '\0';
+
+                            // Salva o score no array placar (substitui o último)
+                            placar[SCORE_ARRAY_MAX - 1] = player.score;
+
+                            // Ordena o array em ordem decrescente (melhor primeiro)
+                            OrdenarPlacar(placar);
+
+                            // Salva o array em arquivo binário
+                            SalvarPlacar(placar);
+
+                            nomeConfirmado = true;
+                            modoSalvar = false;     // sai do modo de entrada
+                            podeSalvarScore = 0;    // impede reexibição
+                        }
+
+                        // Escape – cancela o salvamento
+                        if (IsKeyPressed(KEY_ESCAPE))
+                        {
+                            nomeCancelado = true;
+                            modoSalvar = false;
+                            podeSalvarScore = 0;
+                        }
+
+                        // ----- Desenho da tela de entrada do nome -----
+                        BeginDrawing();
+                        ClearBackground(DARKGRAY);
+
+                        DrawText("DIGITE SEU NOME", TELA_LARGURA/2 - MeasureText("DIGITE SEU NOME", 30)/2,
+                                TELA_ALTURA/4 - 60, 30, WHITE);
+                        DrawText("(Enter para salvar, ESC para pular)", TELA_LARGURA/2 - MeasureText("(Enter para salvar, ESC para pular)", 20)/2,
+                                TELA_ALTURA/4 - 30, 20, LIGHTGRAY);
+
+                        // Retângulo do campo de texto
+                        Rectangle campo = { TELA_LARGURA/2 - 150, TELA_ALTURA/2 - 15, 300, 40 };
+                        DrawRectangleRec(campo, LIGHTGRAY);
+                        DrawText(nomeBuffer, campo.x + 10, campo.y + 10, 20, BLACK);
+
+                        // Cursor piscante (opcional)
+                        if (((int)(GetTime() * 2) % 2) == 0)
+                        {
+                            float cursorX = campo.x + 10 + MeasureText(nomeBuffer, 20);
+                            DrawLine(cursorX, campo.y + 8, cursorX, campo.y + 32, BLACK);
+                        }
+
+                        EndDrawing();
+
+                        // Enquanto estiver no modo de entrada, não processa mais nada
+                        continue;
+                    }
+
+                    // ----- Navegação normal da tela de fim (após sair do modo salvar) -----
+                    // Navegação por teclado
                     if (IsKeyPressed(KEY_DOWN))
                         opcaoFim = (opcaoFim + 1) % 3;
                     if (IsKeyPressed(KEY_UP))
                         opcaoFim = (opcaoFim == 0) ? 2 : opcaoFim - 1;
 
-                    // ----- Navegação por mouse -----
+                    // Navegação por mouse
                     Vector2 mouse = GetMousePosition();
                     Rectangle retJogarNovamente = { TELA_LARGURA/2 - 150, TELA_ALTURA/2 - 40, 300, 45 };
                     Rectangle retMenuFim        = { TELA_LARGURA/2 - 150, TELA_ALTURA/2 + 20, 300, 45 };
@@ -1599,11 +1773,11 @@ EstadoJogo LoopJogo()
                             escolhaFeita = 1;
                     }
 
-                    // ----- Confirmação por Enter -----
+                    // Confirmação por Enter
                     if (IsKeyPressed(KEY_ENTER))
                         escolhaFeita = 1;
 
-                    // ----- Desenho da tela de fim -----
+                    // ----- Desenho da tela de fim (vitória/derrota) -----
                     BeginDrawing();
                     ClearBackground(DARKGRAY);
 
@@ -1626,10 +1800,12 @@ EstadoJogo LoopJogo()
                                 TELA_LARGURA/2 - 100, TELA_ALTURA/4 + 70, 20, LIGHTGRAY);
                     }
 
-                    // Checar os scores, se for maior ou igual ao último seguindo os critérios,
-                    // Perguntar se o usuário deseja salvar seu nome.
-                    // Se o usuário digitar algo e apertar "Salvar", salvar o score no binário,
-                    // lembrando de fazer a organização em ordem decrescente
+                    // Mensagem adicional caso o score não tenha sido qualificado para salvar
+                    if (!podeSalvarScore && !modoSalvar && !nomeConfirmado && !nomeCancelado)
+                    {
+                        DrawText("Seu score nao foi alto o suficiente para entrar no placar.",
+                                TELA_LARGURA/2 - 200, TELA_ALTURA/2 - 120, 20, GRAY);
+                    }
 
                     // Opções
                     Color corJogar = (opcaoFim == 0) ? YELLOW : LIGHTGRAY;
@@ -1640,7 +1816,7 @@ EstadoJogo LoopJogo()
                     DrawText("Menu Principal",  retMenuFim.x + 30,        retMenuFim.y + 10,        25, corMenu);
                     DrawText("Sair",            retSairFim.x + 100,       retSairFim.y + 10,        25, corSair);
 
-                    // Contornos para debug visual (opcional)
+                    // Contornos
                     DrawRectangleLinesEx(retJogarNovamente, 1, LIGHTGRAY);
                     DrawRectangleLinesEx(retMenuFim, 1, LIGHTGRAY);
                     DrawRectangleLinesEx(retSairFim, 1, LIGHTGRAY);
@@ -1648,7 +1824,7 @@ EstadoJogo LoopJogo()
                     EndDrawing();
                 }
 
-                // ----- Processa a escolha -----
+                // ----- Processa a escolha final -----
                 if (WindowShouldClose())
                 {
                     estado = FIM;
@@ -1659,7 +1835,6 @@ EstadoJogo LoopJogo()
                     switch (opcaoFim)
                     {
                         case 0: // Jogar Novamente
-                            // Reinicializa tudo
                             player = GetPlayerPadrao();
                             inimigos = GetInimigosPadrao();
                             plataformas = GetPlataformasPadrao();
@@ -1670,13 +1845,13 @@ EstadoJogo LoopJogo()
                             timerTotal = 0.0f;
                             playerGanhou = 0;
                             estadoInterno = CARREGAMENTO;
-                            loopJogo = 1;          // continua o loop principal do jogo
-                            estado = JOGO;         // permanece no estado JOGO
+                            loopJogo = 1;
+                            estado = JOGO;
                             break;
 
                         case 1: // Menu Principal
                             estado = MENU;
-                            loopJogo = 0;          // encerra este loop, main voltará ao menu
+                            loopJogo = 0;
                             break;
 
                         case 2: // Sair
