@@ -361,13 +361,19 @@ Portal GetPortalPadrao();
 
 
 // ==================================================
-// Funções que lidam com a ordenação do placar (array de score com tamanho SCORE_ARRAY_MAX)
-// Utiliza QuickSort
+// Função que lida com comparação de Scores
 // ==================================================
 
 // Função para comparar 2 scores e devolver qual é maior pela lógica:
 // 1º - Maior Fase Alcancada > 2º - Menor Tempo Total
 int DevolverMaiorScore(Score score1, Score score2);
+
+
+// ==================================================
+// Funções que lidam com a ordenação do placar (array de score com tamanho SCORE_ARRAY_MAX)
+// Utiliza QuickSort
+// Feitas com a ajuda do DeepSeek, pois apesar de saber implementar o algoritmo, não sabia exatamente uma forma eficiente de fazê-lo
+// ==================================================
 
 // Função que troca dois elementos de posição no array
 void TrocarScore(Score *a, Score *b);
@@ -439,6 +445,7 @@ EstadoJogo LoopMenu();
 EstadoJogo LoopScore();
 
 // Função que simula o jogo em si, funciona com uma máquina de estado interna
+// Desenvolvida com auxílio do DeepSeek (IA) e revisada/corrigida manualmente
 EstadoJogo LoopJogo();
 
 

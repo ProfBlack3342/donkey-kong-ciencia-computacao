@@ -83,3 +83,11 @@ Exibição da tela de vitória ou derrota, verificação do score do jogador e s
 # Licenças
 Raylib-Quickstart por Jeffery Myers está marcada como CC0 1.0. Para ver uma cópia, visite https://creativecommons.org/publicdomain/zero/1.0/
 
+## 🤖 Assistência de IA
+Partes da lógica de movimentação, física, colisões e estrutura do jogo foram desenvolvidas com o auxílio do **DeepSeek**, um assistente de IA, e posteriormente revisadas, corrigidas e adaptadas por um desenvolvedor humano para atender às necessidades específicas do projeto.
+
+Isso inclui as funções:
+- `AtualizarPlayer` – Física, pulo, colisões com plataformas/inimigos/escadas/portal
+- `AtualizarInimigos` – Patrulha, inversão de direção, colisões
+- `LoopJogo` – Desenho da tela e entrada do score
+- Algoritmo de ordenação (`TrocarScore`, `ParticionarPlacar`, `QuickSortPlacar` e `OrdenarPlacar`) para o placar
