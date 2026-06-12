@@ -360,42 +360,48 @@ Portal GetPortalPadrao();
 
 
 // ==================================================
-// Funções que lidam com score
+// Funções que lidam com a ordenação do placar (array de score com tamanho SCORE_ARRAY_MAX)
+// Utiliza QuickSort
 // ==================================================
 
 // Função para comparar 2 scores e devolver qual é maior pela lógica:
 // 1º - Maior Fase Alcancada > 2º - Menor Tempo Total
 int DevolverMaiorScore(Score score1, Score score2);
 
+// Função que troca dois elementos de posição no array
+void TrocarScore(Score *a, Score *b);
+
+// Partição do QuickSort (usa DevolverMaiorScore para decidir a ordem)
+int ParticionarPlacar(Score placar[], int baixo, int alto);
+
+// QuickSort recursivo (ordem decrescente)
+void QuickSortPlacar(Score placar[], int baixo, int alto);
+
+// Função que ordena, em ordem decrescente, um placar de SCORE_ARRAY_MAX scores
+void OrdenarPlacar(Score placar[]);
+
 
 // ==================================================
-// Funções que lidam com o placar (array de score com tamanho SCORE_ARRAY_MAX)
+// Funções que lidam com o carregamento e salvamento do placar (array de score com tamanho SCORE_ARRAY_MAX)
 // ==================================================
 
-// ## A fazer:
 // Função para carregar scores de um arquivo binário para um array de tipo Score com tamanho SCORE_ARRAY_MAX
-int CarregarPlacar(Score placar[SCORE_ARRAY_MAX]);
+int CarregarPlacar(Score placar[]);
 
-// ## A fazer:
-// Função que recebe um array de tipo Score com tamanho SCORE_ARRAY_MAX e ordena ele de melhor a pior, seguindo a lógica:
-// 1º - Maior Fase Alcancada > 2º - Menor Tempo Total
-void OrdenarPlacar(Score placar[SCORE_ARRAY_MAX]);
-
-// ## A fazer:
 // Função que salva um array de tipo Score com tamanho SCORE_ARRAY_MAX em um arquivo binário
-int SalvarPlacar(Score placar[SCORE_ARRAY_MAX]);
+int SalvarPlacar(Score placar[]);
 
 
 // ==================================================
-// Funções que lidam com o mapa
+// Funções que lidam com o carregamento do mapa
 // ==================================================
 
 // Função que carrega um mapa de um arquivo de texto
-void CarregarMapa(int numeroFase, char mapa[MAPA_X][MAPA_Y]);
+void CarregarMapa(int numeroFase, char mapa[][MAPA_Y]);
 
 // Função que percorre um array de duas dimensões que armazena um mapa,
 // atribuindo a posição de cada elemento para sua estrutura correspondente
-void MatrizParaStructs(char mapa[MAPA_X][MAPA_Y], Player *player, Inimigos *inimigos, Plataformas *plataformas, Escadas *escadas, Portal *portal);
+void MatrizParaStructs(char mapa[][MAPA_Y], Player *player, Inimigos *inimigos, Plataformas *plataformas, Escadas *escadas, Portal *portal);
 
 
 // ==================================================
@@ -660,61 +666,96 @@ int DevolverMaiorScore(Score score1, Score score2)
     }
 }
 
-int CarregarPlacar(Score placar[SCORE_ARRAY_MAX])
+void TrocarScore(Score *a, Score *b)
 {
-    FILE *arquivo = fopen(SCORE_NOME_ARQUIVO, "rb");
+    Score scoreTemp = *a;
+    *a = *b;
+    *b = scoreTemp;
+}
+int ParticionarPlacar(Score placar[], int baixo, int alto)
+{
+    // Pivô: último elemento do segmento
+    Score pivo = placar[alto];
+    int i = baixo - 1;   // índice do último elemento "melhor que o pivo"
 
+    for (int j = baixo; j < alto; j++) {
+        // Se placar[j] é melhor que o pivo, deve ir para a esquerda
+        // DevolverMaiorScore(A, B) retorna 1 se A > B (melhor)
+        if (DevolverMaiorScore(placar[j], pivo) == 1) {
+            i++;
+            TrocarScore(&placar[i], &placar[j]);
+        }
+    }
+    // Posiciona o pivo no lugar correto
+    TrocarScore(&placar[i + 1], &placar[alto]);
+    return i + 1;
+}
+void QuickSortPlacar(Score placar[], int baixo, int alto)
+{
+    if (baixo < alto) {
+        int indicePivo = ParticionarPlacar(placar, baixo, alto);
+        QuickSortPlacar(placar, baixo, indicePivo - 1);
+        QuickSortPlacar(placar, indicePivo + 1, alto);
+    }
+}
+void OrdenarPlacar(Score placar[])
+{
+    QuickSortPlacar(placar, 0, (SCORE_ARRAY_MAX - 1));
+}
+
+int CarregarPlacar(Score placar[])
+{
+    char caminhoPlacar[256];
+    strcpy(caminhoPlacar, GetApplicationDirectory());  // Raylib fornece o diretório do executável
+    strcat(caminhoPlacar, SCORE_NOME_ARQUIVO);
+
+    FILE *arquivo = fopen(caminhoPlacar, "rb");
     // Verificando se abriu o arquivo
     if(!arquivo)
         return 0;
 
-    // Percorrer o array, salvando nele os dados contidos no arquivo
-    for(int i = 0; i < SCORE_ARRAY_MAX; i++)
-    {
-        
-    }
+    // Ler dados do arquivo e salva-los no array, checando se teve sucesso
+    if( (fread(placar, sizeof(Score), SCORE_ARRAY_MAX, arquivo)) != SCORE_ARRAY_MAX )
+        return 0;
 
     fclose(arquivo);
     return 1;
 }
-void OrdenarPlacar(Score placar[SCORE_ARRAY_MAX])
+int SalvarPlacar(Score placar[])
 {
+    char caminhoPlacar[256];
+    strcpy(caminhoPlacar, GetApplicationDirectory());  // Raylib fornece o diretório do executável
+    strcat(caminhoPlacar, SCORE_NOME_ARQUIVO);
 
-}
-int SalvarPlacar(Score placar[SCORE_ARRAY_MAX])
-{
     FILE *arquivo = fopen(SCORE_NOME_ARQUIVO, "wb");
-
     // Verificando se abriu o arquivo
     if(!arquivo)
         return 0;
 
-    // Percorrer o array e salvar cada valor no arquivo
-    for(int i = 0; i < SCORE_ARRAY_MAX; i++)
-    {
-        
-    }
+    // Salvar valores do array no arquivo, checando se teve sucesso
+    if( (fwrite(placar, sizeof(Score), SCORE_ARRAY_MAX, arquivo)) != SCORE_ARRAY_MAX )
+        return 0;
 
     fclose(arquivo);
     return 1;
 }
 
-void CarregarMapa(int numeroFase, char mapa[MAPA_X][MAPA_Y])
+void CarregarMapa(int numeroFase, char mapa[][MAPA_Y])
 {
     char nomeMapaInicio[] = "mapa";
     char nomeMapaFim[] = ".txt";
     char nomeMapa[10];                  // {'m', 'a', 'p', 'a', 'N', '.', 't', 'x', 't', '\0'}
-    char basePath[256] = {0};
+    char caminhoMapa[256] = {0};
 
     snprintf(nomeMapa, sizeof(nomeMapa), "%s%d%s", nomeMapaInicio, numeroFase, nomeMapaFim);
-    strcpy(basePath, GetApplicationDirectory());  // Raylib fornece o diretório do executável
-    strcat(basePath, nomeMapa);
+    strcpy(caminhoMapa, GetApplicationDirectory());  // Raylib fornece o diretório do executável
+    strcat(caminhoMapa, nomeMapa);
 
     // Buffer para uma linha do arquivo: MAPA_X caracteres + '\n' + '\0'
     char linha[MAPA_X + 2];
     int lin = 0;         // índice da linha atual no arquivo (0 a MAPA_Y-1)
 
-    FILE *arquivo = fopen(basePath, "r");
+    FILE *arquivo = fopen(caminhoMapa, "r");
     if (!arquivo) {
         // Em caso de erro, preenche toda a matriz com espaços
         for (int col = 0; col < MAPA_X; col++)
@@ -751,7 +792,7 @@ void CarregarMapa(int numeroFase, char mapa[MAPA_X][MAPA_Y])
 
     fclose(arquivo);
 }
-void MatrizParaStructs(char mapa[MAPA_X][MAPA_Y], Player *player, Inimigos *inimigos, Plataformas *plataformas, Escadas *escadas, Portal *portal)
+void MatrizParaStructs(char mapa[][MAPA_Y], Player *player, Inimigos *inimigos, Plataformas *plataformas, Escadas *escadas, Portal *portal)
 {
     EscadaBaixo *escadaBaixo;
     EscadaCima *escadaCima;
@@ -1240,6 +1281,7 @@ EstadoJogo LoopJogo()
 
     while (loopJogo)
     {
+        // Checando para ver se o jogador fechou a janela, e encerrar o jogo se for o caso
         if (WindowShouldClose())
         {
             estado = FIM;
@@ -1251,17 +1293,30 @@ EstadoJogo LoopJogo()
         {
             case CARREGAMENTO:
             {
+                // Inicializar structs com valores padrão
                 player = GetPlayerPadrao();
                 inimigos = GetInimigosPadrao();
                 plataformas = GetPlataformasPadrao();
                 escadas = GetEscadasPadrao();
                 portal = GetPortalPadrao();
 
-                CarregarPlacar(placar);
+                // Tentar carregar o placar do arquivo binário
+                // Em caso de falha, preenche o array com valores padrão de Score
+                if(!(CarregarPlacar(placar)))
+                {
+                    for(int i = 0; i < SCORE_ARRAY_MAX; i++)
+                    {
+                        placar[i] = GetScorePadrao();
+                    }
+                }
 
+                // Carregar o mapa atual para o array
                 CarregarMapa(mapaAtual, mapa);
+
+                // Carregar as posições de cada elemento do mapa do array para suas structs correspondentes
                 MatrizParaStructs(mapa, &player, &inimigos, &plataformas, &escadas, &portal);
 
+                // Resetando o timer e mudando o estado
                 timerNivel = 0.0f;
                 estadoInterno = JOGANDO;
 
