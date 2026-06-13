@@ -13,13 +13,12 @@ Algoritmos e Programação - 2026/1
 - Melchior Neto
 
 ## Como compilar (VSCode)
-<details>
 
+<details>
 <summary>
 
 ### Windows 
 </summary>
-<br>
 
 #### Instalação do Compilador:
 1. Baixar e extrair a ultima versão de https://github.com/skeeto/w64devkit/releases em algum local de fácil acesso
@@ -55,12 +54,18 @@ Algoritmos e Programação - 2026/1
 10. Aperte F5 novamente e aproveite o jogo!
 </details>
 
+<details>
+<summary>
+
 ### Linux
+</summary>
+
 1. Abrir a pasta do jogo no VSCode
 2. Abrir o arquivo main.c
 3. Aperte F5 e espere o processo concluir
 4. Feche o jogo e copie/mova os arquivos dos mapas e scores para a pasta bin\Debug DENTRO DO PROJETO
 5. Aperte F5 novamente e aproveite o jogo!
+</details>
 
 # Descrição do Programa
 O programa é dividido em 3 loops principais, que são controlados por uma máquina de estado presente no main:
