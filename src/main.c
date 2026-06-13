@@ -1379,8 +1379,8 @@ EstadoJogo LoopScore()
             int yBase = 100;
             DrawText("Pos", 80, yBase, 25, YELLOW);
             DrawText("Nome", 160, yBase, 25, YELLOW);
-            DrawText("Fase", 400, yBase, 25, YELLOW);
-            DrawText("Tempo (s)", 480, yBase, 25, YELLOW);
+            DrawText("Ultima Fase", 400, yBase, 25, YELLOW);
+            DrawText("Tempo (s)", 600, yBase, 25, YELLOW);
 
             // Linhas do placar
             for (int i = 0; i < SCORE_ARRAY_MAX; i++)
@@ -1398,10 +1398,10 @@ EstadoJogo LoopScore()
                 DrawText(nomeExibicao, 160, y, 20, cor);
 
                 // Fase completada
-                DrawText(TextFormat("%d", placar[i].faseCompletada + 1), 400, y, 20, cor);
+                DrawText(TextFormat("%d", placar[i].faseCompletada), 400, y, 20, cor);
 
                 // Tempo total (com duas casas decimais)
-                DrawText(TextFormat("%.2f", placar[i].tempoVivo), 480, y, 20, cor);
+                DrawText(TextFormat("%.2f", placar[i].tempoVivo), 600, y, 20, cor);
             }
 
             // Instrução de retorno
