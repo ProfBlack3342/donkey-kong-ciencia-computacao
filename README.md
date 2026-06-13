@@ -12,7 +12,16 @@ Algoritmos e Programação - 2026/1
 - Augusto Sturm
 - Melchior Neto
 
-## Como compilar (VSCode)
+## Como compilar
+
+### Terminal
+
+#### Linux
+1. Instale o pacote "gcc" do repositório da sua distribuição (se ele já não estiver instalado)
+2. Abra um terminal, e navegue até o local do código-fonte
+3. Execute o comando `gcc nome-do-codigo-fonte.c -o nome-do-executavel-que-sera-gerado -lraylib -lGL -lm -lX11`
+4. Certifique-se que os arquivos de mapa estão na mesma localização do executável gerado
+5. Execute no terminal `./nome-do-executavel-que-sera-gerado` ou duplo clique pelo seu navegador de arquivos
 
 ### VSCode
 <details>
@@ -60,11 +69,12 @@ Algoritmos e Programação - 2026/1
 #### Linux
 </summary>
 
-1. Abrir a pasta do jogo no VSCode
-2. Abrir o arquivo main.c
-3. Aperte F5 e espere o processo concluir
-4. Feche o jogo e copie/mova os arquivos dos mapas e scores para a pasta bin\Debug DENTRO DO PROJETO
-5. Aperte F5 novamente e aproveite o jogo!
+1. Instale o pacote "gcc" do repositório da sua distribuição (se ele já não estiver instalado)
+2. Abrir a pasta do jogo no VSCode
+3. Abrir o arquivo main.c
+4. Aperte F5 e espere o processo concluir
+5. Feche o jogo e copie/mova os arquivos dos mapas e scores para a pasta bin\Debug DENTRO DO PROJETO
+6. Aperte F5 novamente e aproveite o jogo!
 </details>
 
 # Descrição do Programa
