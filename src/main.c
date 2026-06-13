@@ -113,7 +113,7 @@
 // Mapa
 #define MAPA_X 30
 #define MAPA_Y 30
-#define MAPA_MAX 5
+#define MAPA_MAX 4
 
 // Score
 #define SCORE_NOME_MAX 21
@@ -197,57 +197,109 @@ typedef enum enum_estado_jogo_interno {
 
 // Estrutura que armazena os dados relativos a um score
 typedef struct struct_score {
+    // String com o nome do jogador, que pode ter até SCORE_NOME_MAX - 1 caracteres
     char nome[SCORE_NOME_MAX];
+
+    // O tempo total que o jogador permaneceu vivo no jogo
     float tempoVivo;
+
+    // A maior fase que foi completada pelo jogador
     int faseCompletada;
 } Score;
 
 // Estrutura que armazena os dados relativos a posição de um elemento do mapa
 typedef struct struct_posicao {
+    // Posição X do elemento no mapa
     float x;
+
+    // Posição Y do elemento no mapa
     float y;
 } Posicao;
 
 // Estrutura que armazena os dados relativos ao player no mapa
 typedef struct struct_player {
+    // Score do player
     Score score;
+    
+    // Posicao do player no mapa
     Posicao posicao;
+    
+    // Se o player está vivo
     int isVivo;
+    
+    // Velocidade do player
     float velocidade;
+    
+    // Se o player pode pular
     int podePular;
+    
+    // Se o player concluiu a fase
     int concluiuFase;
+    
+    // Altura do player
     float altura;
+    
+    // Comprimento do player
     float comprimento;
+    
+    // Cor do player
     Color cor;
 } Player;
 
 // Estrutura que armazena os dados relativos a um inimigo no mapa
 typedef struct struct_inimigo {
+    // Posição do inimigo no mapa
     Posicao posicao;
+
+    // Velocidade do inimigo
     float velocidade;
+
+    // Direcao do inimigo
+    // -1 = Esquerda
+    // 0 = Parado
+    // 1 = Direita
     int direcao;
+    
+    // Altura do inimigo
     float altura;
+    
+    // Comprimento do inimigo
     float comprimento;
+    
+    // Cor do inimigo
     Color cor;
 } Inimigo;
 
 // Estrutura que armazena os dados relativos a todos os inimigos no mapa
 typedef struct struct_inimigos {
+    // Array com todas as structs "Inimigo" existentes
     Inimigo inimigo[INIMIGO_MAX];
+
+    // Quantidade de structs salvas no array "struct_plataformas.inimigo"
     int quantInimigos;
 } Inimigos;
 
 // Estrutura que armazena os dados relativos a uma plataforma do mapa
 typedef struct struct_plataforma {
+    // Posição da plataforma no mapa
     Posicao posicao;
+
+    // Altura da plataforma
     float altura;
+    
+    // Comprimento da plataforma
     float comprimento;
+    
+    // Cor da plataforma
     Color cor;
 } Plataforma;
 
 // Estrutura que armazena os dados relativos a todas as plataformas do mapa
 typedef struct struct_plataformas {
+    // Array com todas as structs "Plataforma" existentes
     Plataforma plataforma[PLATAFORMA_MAX];
+
+    // Quantidade de structs salvas no array "struct_plataformas.plataforma"
     int quantPlataformas;
 } Plataformas;
 
@@ -257,46 +309,89 @@ typedef struct struct_escada_cima EscadaCima;
 
 // Estrutura que armazena os dados relativos a uma parte de baixo de escada
 typedef struct struct_escada_baixo {
+    // Posição da parte de baixo da escada no mapa
     Posicao posicao;
+
+    // Estrutura "EscadaCima" que está ligada a esta
     EscadaCima *escadaCima;
+    
+    // Altura da parte de baixo da escada
     float altura;
+    
+    // Comprimento da parte de baixo da escada
     float comprimento;
+    
+    // Cor da parte de baixo da escada
     Color cor;
 } EscadaBaixo;
 
 // Estrutura que armazena os dados relativos a uma parte do meio de escada
 typedef struct struct_escada_meio {
+    // Posição da parte do meio da escada no mapa
     Posicao posicao;
+
+    // Altura da parte do meio da escada
     float altura;
+
+    // Comprimento da parte do meio da escada
     float comprimento;
+
+    // Cor da parte do meio da escada
     Color cor;
 } EscadaMeio;
 
 // Estrutura que armazena os dados relativos a uma parte de cima de escada
 // Definição da struct declarada anteriormente
 struct struct_escada_cima {
+    // Posição da parte de cima da escada no mapa
     Posicao posicao;
+
+    // Estrutura "EscadaBaixo" que está ligada a esta
     EscadaBaixo *escadaBaixo;
+
+    // Altura da parte de cima da escada
     float altura;
+
+    // Comprimento da parte de cima da escada
     float comprimento;
+
+    // Cor da parte de cima da escada
     Color cor;
 };
 
 // Estrutura que armazena os dados relativos a todas as escadas do mapa
 typedef struct struct_escadas {
+    // Array com todas as structs "EscadaBaixo" existentes
     EscadaBaixo escadaBaixo[ESCADA_BAIXO_MAX];
+
+    // Quantidade de structs salvas no array "struct_escadas.escadaBaixo"
     int quantEscadasBaixo;
+
+    // Array com todas as structs "EscadaMeio" existentes
     EscadaMeio escadaMeio[ESCADA_MEIO_MAX];
+
+    // Quantidade de structs salvas no array "struct_escadas.escadaMeio"
     int quantEscadasMeio;
+
+    // Array com todas as structs "EscadaCima" existentes
     EscadaCima escadaCima[ESCADA_CIMA_MAX];
+
+    // Quantidade de structs salvas no array "struct_escadas.escadaCima"
     int quantEscadasCima;
 } Escadas;
 
 // Estrutura que armazena os dados relativos ao portal no mapa
 typedef struct struct_portal {
+    // Posição do portal no mapa
     Posicao posicao;
+
+    // Altura do portal
     float altura;
+
+    // Comprimento do portal
     float comprimento;
+
+    // Cor do portal
     Color cor;
 } Portal;
 
@@ -1274,6 +1369,7 @@ EstadoJogo LoopScore()
         }
 
         BeginDrawing();
+
             ClearBackground(DARKPURPLE);
 
             // Título
@@ -1283,7 +1379,7 @@ EstadoJogo LoopScore()
             int yBase = 100;
             DrawText("Pos", 80, yBase, 25, YELLOW);
             DrawText("Nome", 160, yBase, 25, YELLOW);
-            DrawText("Fase", 400, yBase, 25, YELLOW);
+            DrawText("Fases", 400, yBase, 25, YELLOW);
             DrawText("Tempo (s)", 480, yBase, 25, YELLOW);
 
             // Linhas do placar
@@ -1320,29 +1416,44 @@ EstadoJogo LoopScore()
 }
 EstadoJogo LoopJogo()
 {
-    EstadoJogo estado = MENU; // valor inicial seguro
+    // Variável que será enviada como resposta no final desta função, define qual o próximo estado a ser executado no main
+    EstadoJogo estado = MENU;
+    // Variável que define o estado da máquina de estados interna desta função
     EstadoJogoInterno estadoInterno = CARREGAMENTO;
 
+    // Estrutura que representa o jogador no mapa
     Player player;
+    // Estrutura que representa os inimigos no mapa
     Inimigos inimigos;
+    // Estrutura que representa as plataformas do mapa
     Plataformas plataformas;
+    // Estrutura que representa as escadas do mapa
     Escadas escadas;
+    // Estrutura que representa o portal no mapa
     Portal portal;
-
+    // Array de estruturas, com todos os scores que já foram registrados
     Score placar[SCORE_ARRAY_MAX];
 
+    // O mapa que está atualmente sendo mostrado na tela
     int mapaAtual = 0;
+    // O mapa em si, carregado do arquivo correspondente
     char mapa[MAPA_X][MAPA_Y];
 
+    // Variável que controla se o loop do jogo ainda deve ocorrer
     int loopJogo = 1;
+    // Variável que controla se o jogo está no menu de pausa
     int isPausado = 0;
+    // Variável que define a opção sendo escolhida no menu de pausa DURANTE A NAVEGAÇÃO
     int opcaoPause = 0;
+    // Variável que define se o jogador pode salvar o score ou não, após encerrar o jogo
     int podeSalvarScore = 0;
-
+    // O timer do mapa atual
     float timerNivel = 0.0f;
+    // O timer somado de todos os mapas jogados
     float timerTotal = 0.0f;
-
+    // Variável que define se o jogador ganhou ou não o jogo
     int playerGanhou = 0;
+
 
     while (loopJogo)
     {
@@ -1389,6 +1500,7 @@ EstadoJogo LoopJogo()
             }
             case JOGANDO:
             {
+                // Tempo decorrido (em segundos) desde o ultimo frame
                 float deltaTime = GetFrameTime();
 
                 // Controle de pausa
@@ -1399,8 +1511,12 @@ EstadoJogo LoopJogo()
                 }
 
                 // Definição dos retângulos do menu de pausa
+
+                // Botão de continuar
                 Rectangle retContinuar  = { TELA_LARGURA/2 - 120, TELA_ALTURA/2 - 50, 240, 40 };
+                // Botão de voltar ao menu
                 Rectangle retMenu       = { TELA_LARGURA/2 - 120, TELA_ALTURA/2 + 10, 240, 40 };
+                // Botão de encerrar o jogo
                 Rectangle retSair       = { TELA_LARGURA/2 - 120, TELA_ALTURA/2 + 70, 240, 40 };
 
                 if (!isPausado)
@@ -1446,13 +1562,6 @@ EstadoJogo LoopJogo()
                     }
 
                     AtualizarInimigos(&inimigos, &plataformas, deltaTime);
-
-                    // Reset de teste (tecla R)
-                    if (IsKeyPressed(KEY_R))
-                    {
-                        player.posicao.x = 450;
-                        player.posicao.y = 280;
-                    }
                 }
                 else
                 {
@@ -1482,6 +1591,7 @@ EstadoJogo LoopJogo()
                         }
                     }
 
+                    // Posição atual do mouse na tela
                     Vector2 mouse = GetMousePosition();
 
                     if (CheckCollisionPointRec(mouse, retContinuar))
@@ -1514,124 +1624,127 @@ EstadoJogo LoopJogo()
 
                 // Desenho da cena
                 BeginDrawing();
-                ClearBackground(LIGHTGRAY);
 
-                // Desenhando as escadas
-                for (int i = 0; i < escadas.quantEscadasBaixo; i++)
-                {
+                    ClearBackground(LIGHTGRAY);
+
+                    // Desenhando as escadas
+                    for (int i = 0; i < escadas.quantEscadasBaixo; i++)
+                    {
+                        DrawRectangleRec(
+                            (Rectangle){
+                                escadas.escadaBaixo[i].posicao.x,
+                                escadas.escadaBaixo[i].posicao.y,
+                                escadas.escadaBaixo[i].comprimento,
+                                escadas.escadaBaixo[i].altura
+                            }, 
+                            escadas.escadaBaixo[i].cor);
+                    }
+                    for (int i = 0; i < escadas.quantEscadasMeio; i++)
+                    {
+                        DrawRectangleRec(
+                            (Rectangle){
+                                escadas.escadaMeio[i].posicao.x,
+                                escadas.escadaMeio[i].posicao.y,
+                                escadas.escadaMeio[i].comprimento,
+                                escadas.escadaMeio[i].altura
+                            }, 
+                            escadas.escadaMeio[i].cor);
+                    }
+                    for (int i = 0; i < escadas.quantEscadasCima; i++)
+                    {
+                        DrawRectangleRec(
+                            (Rectangle){
+                                escadas.escadaCima[i].posicao.x,
+                                escadas.escadaCima[i].posicao.y,
+                                escadas.escadaCima[i].comprimento,
+                                escadas.escadaCima[i].altura
+                            }, 
+                            escadas.escadaCima[i].cor);
+                    }
+
+                    // Desenhando o portal
                     DrawRectangleRec(
                         (Rectangle){
-                            escadas.escadaBaixo[i].posicao.x,
-                            escadas.escadaBaixo[i].posicao.y,
-                            escadas.escadaBaixo[i].comprimento,
-                            escadas.escadaBaixo[i].altura
+                            portal.posicao.x,
+                            portal.posicao.y,
+                            portal.comprimento,
+                            portal.altura
                         }, 
-                        escadas.escadaBaixo[i].cor);
-                }
-                for (int i = 0; i < escadas.quantEscadasMeio; i++)
-                {
+                        portal.cor);
+
+                    // Desenhando as plataformas
+                    for (int i = 0; i < plataformas.quantPlataformas; i++)
+                    {
+                        DrawRectangleRec(
+                            (Rectangle){
+                                plataformas.plataforma[i].posicao.x,
+                                plataformas.plataforma[i].posicao.y,
+                                plataformas.plataforma[i].comprimento,
+                                plataformas.plataforma[i].altura
+                            }, 
+                            plataformas.plataforma[i].cor);
+                    }
+
+                    // Desenhando os inimigos
+                    for (int i = 0; i < inimigos.quantInimigos; i++)
+                    {
+                        DrawRectangleRec(
+                            (Rectangle){
+                                inimigos.inimigo[i].posicao.x,
+                                inimigos.inimigo[i].posicao.y,
+                                inimigos.inimigo[i].comprimento,
+                                inimigos.inimigo[i].altura
+                            }, 
+                            inimigos.inimigo[i].cor);
+                    }
+
+                    // Desenhando o player
                     DrawRectangleRec(
                         (Rectangle){
-                            escadas.escadaMeio[i].posicao.x,
-                            escadas.escadaMeio[i].posicao.y,
-                            escadas.escadaMeio[i].comprimento,
-                            escadas.escadaMeio[i].altura
+                            player.posicao.x,
+                            player.posicao.y,
+                            player.comprimento,
+                            player.altura
                         }, 
-                        escadas.escadaMeio[i].cor);
-                }
-                for (int i = 0; i < escadas.quantEscadasCima; i++)
-                {
-                    DrawRectangleRec(
-                        (Rectangle){
-                            escadas.escadaCima[i].posicao.x,
-                            escadas.escadaCima[i].posicao.y,
-                            escadas.escadaCima[i].comprimento,
-                            escadas.escadaCima[i].altura
-                        }, 
-                        escadas.escadaCima[i].cor);
-                }
+                        player.cor);
 
-                // Desenhando o portal
-                DrawRectangleRec(
-                    (Rectangle){
-                        portal.posicao.x,
-                        portal.posicao.y,
-                        portal.comprimento,
-                        portal.altura
-                    }, 
-                    portal.cor);
+                    // Desenho do timer + fase
+                    int minutos = (int)(timerNivel / 60);
+                    int segundos = (int)(timerNivel) % 60;
+                    int centesimos = (int)((timerNivel - (int)timerNivel) * 100);
+                    DrawText(TextFormat("Fase: %d\nTempo: %02d:%02d:%02d", mapaAtual, minutos, segundos, centesimos),
+                            10, 10, 30, WHITE);
 
-                // Desenhando as plataformas
-                for (int i = 0; i < plataformas.quantPlataformas; i++)
-                {
-                    DrawRectangleRec(
-                        (Rectangle){
-                            plataformas.plataforma[i].posicao.x,
-                            plataformas.plataforma[i].posicao.y,
-                            plataformas.plataforma[i].comprimento,
-                            plataformas.plataforma[i].altura
-                        }, 
-                        plataformas.plataforma[i].cor);
-                }
+                    // Menu de pausa sobreposto, caso o jogador tenha pausado
+                    if (isPausado)
+                    {
+                        DrawRectangle(0, 0, TELA_LARGURA, TELA_ALTURA, Fade(BLACK, 0.6f));
+                        DrawText("PAUSA", TELA_LARGURA/2 - MeasureText("PAUSA", 50)/2, TELA_ALTURA/4, 50, WHITE);
 
-                // Desenhando os inimigos
-                for (int i = 0; i < inimigos.quantInimigos; i++)
-                {
-                    DrawRectangleRec(
-                        (Rectangle){
-                            inimigos.inimigo[i].posicao.x,
-                            inimigos.inimigo[i].posicao.y,
-                            inimigos.inimigo[i].comprimento,
-                            inimigos.inimigo[i].altura
-                        }, 
-                        inimigos.inimigo[i].cor);
-                }
+                        Color corContinuar = (opcaoPause == 0) ? RED : LIGHTGRAY;
+                        Color corMenu      = (opcaoPause == 1) ? RED : LIGHTGRAY;
+                        Color corSair      = (opcaoPause == 2) ? RED : LIGHTGRAY;
 
-                // Desenhando o player
-                DrawRectangleRec(
-                    (Rectangle){
-                        player.posicao.x,
-                        player.posicao.y,
-                        player.comprimento,
-                        player.altura
-                    }, 
-                    player.cor);
+                        DrawText("Continuar",       retContinuar.x + 30, retContinuar.y + 8, 25, corContinuar);
+                        DrawText("Menu Principal",  retMenu.x + 10,      retMenu.y + 8,      25, corMenu);
+                        DrawText("Sair",            retSair.x + 80,      retSair.y + 8,      25, corSair);
 
-                // Desenho do timer + fase
-                int minutos = (int)(timerNivel / 60);
-                int segundos = (int)(timerNivel) % 60;
-                int centesimos = (int)((timerNivel - (int)timerNivel) * 100);
-                DrawText(TextFormat("Fase: %d\nTempo: %02d:%02d:%02d", mapaAtual, minutos, segundos, centesimos),
-                        10, 10, 30, WHITE);
-
-                // Menu de pausa sobreposto
-                if (isPausado)
-                {
-                    DrawRectangle(0, 0, TELA_LARGURA, TELA_ALTURA, Fade(BLACK, 0.6f));
-                    DrawText("PAUSA", TELA_LARGURA/2 - MeasureText("PAUSA", 50)/2, TELA_ALTURA/4, 50, WHITE);
-
-                    Color corContinuar = (opcaoPause == 0) ? RED : LIGHTGRAY;
-                    Color corMenu      = (opcaoPause == 1) ? RED : LIGHTGRAY;
-                    Color corSair      = (opcaoPause == 2) ? RED : LIGHTGRAY;
-
-                    DrawText("Continuar",       retContinuar.x + 30, retContinuar.y + 8, 25, corContinuar);
-                    DrawText("Menu Principal",  retMenu.x + 10,      retMenu.y + 8,      25, corMenu);
-                    DrawText("Sair",            retSair.x + 80,      retSair.y + 8,      25, corSair);
-
-                    DrawRectangleLinesEx(retContinuar, 1, DARKGRAY);
-                    DrawRectangleLinesEx(retMenu, 1, DARKGRAY);
-                    DrawRectangleLinesEx(retSair, 1, DARKGRAY);
-                }
+                        DrawRectangleLinesEx(retContinuar, 1, DARKGRAY);
+                        DrawRectangleLinesEx(retMenu, 1, DARKGRAY);
+                        DrawRectangleLinesEx(retSair, 1, DARKGRAY);
+                    }
 
                 EndDrawing();
                 break;
             }
             case ENCERRAMENTO:
             {
+                // Variável que armazena a opção no menu de vitória/derrota sendo escolhida DURANTE A NAVEGAÇÃO
                 int opcaoFim = 0;
+                // Variável que armazena a opção CONFIRMADA pelo jogador no menu de vitória/derrota
                 int escolhaFeita = 0;
 
-                // ---- VERIFICAÇÃO DE ELEGIBILIDADE DO SCORE ----
+                // Variável para armazenar o teste de se o jogador pode salvar o score
                 int comparacao = DevolverMaiorScore(player.score, placar[SCORE_ARRAY_MAX - 1]);
                 if (comparacao == 1 || comparacao == 0)   // player.score >= último placar
                 {
@@ -1643,10 +1756,16 @@ EstadoJogo LoopJogo()
                 }
 
                 // Variáveis para controle da entrada do nome
+
+                // Variável buffer para o nome digitado na tela de salvamento de score
                 char nomeBuffer[SCORE_NOME_MAX] = "";
+                // Variável que armazena o tamanho da string em nomeBuffer, sem o '\0'
                 int  nomeTamanho = 0;
+                // Variável que define se a tela está no "modo" de salvar nome
                 bool modoSalvar = false;
+                // Variável que define se um nome foi confirmado para salvamento na tela de salvamento de score
                 bool nomeConfirmado = false;
+                // Variável que define se o jogador cancelou a tentativa de salvamento na tela de salvamento de score
                 bool nomeCancelado = false;
 
                 // Se o score merece ser salvo, ativa o modo de entrada de nome
@@ -1662,7 +1781,7 @@ EstadoJogo LoopJogo()
                     // ----- Modo de entrada do nome (sobrepõe tudo) -----
                     if (modoSalvar)
                     {
-                        // Processa caracteres pressionados
+                        // Variável que processa caracteres pressionados
                         int tecla = GetCharPressed();
                         while (tecla > 0)
                         {
@@ -1719,24 +1838,25 @@ EstadoJogo LoopJogo()
 
                         // ----- Desenho da tela de entrada do nome -----
                         BeginDrawing();
-                        ClearBackground(DARKGRAY);
 
-                        DrawText("DIGITE SEU NOME", TELA_LARGURA/2 - MeasureText("DIGITE SEU NOME", 30)/2,
-                                TELA_ALTURA/4 - 60, 30, WHITE);
-                        DrawText("(Enter para salvar, ESC para pular)", TELA_LARGURA/2 - MeasureText("(Enter para salvar, ESC para pular)", 20)/2,
-                                TELA_ALTURA/4 - 30, 20, LIGHTGRAY);
+                            ClearBackground(DARKGRAY);
 
-                        // Retângulo do campo de texto
-                        Rectangle campo = { TELA_LARGURA/2 - 150, TELA_ALTURA/2 - 15, 300, 40 };
-                        DrawRectangleRec(campo, LIGHTGRAY);
-                        DrawText(nomeBuffer, campo.x + 10, campo.y + 10, 20, BLACK);
+                            DrawText("DIGITE SEU NOME", TELA_LARGURA/2 - MeasureText("DIGITE SEU NOME", 30)/2,
+                                    TELA_ALTURA/4 - 60, 30, WHITE);
+                            DrawText("(Enter para salvar, ESC para pular)", TELA_LARGURA/2 - MeasureText("(Enter para salvar, ESC para pular)", 20)/2,
+                                    TELA_ALTURA/4 - 30, 20, LIGHTGRAY);
 
-                        // Cursor piscante (opcional)
-                        if (((int)(GetTime() * 2) % 2) == 0)
-                        {
-                            float cursorX = campo.x + 10 + MeasureText(nomeBuffer, 20);
-                            DrawLine(cursorX, campo.y + 8, cursorX, campo.y + 32, BLACK);
-                        }
+                            // Retângulo do campo de texto
+                            Rectangle campo = { TELA_LARGURA/2 - 150, TELA_ALTURA/2 - 15, 300, 40 };
+                            DrawRectangleRec(campo, LIGHTGRAY);
+                            DrawText(nomeBuffer, campo.x + 10, campo.y + 10, 20, BLACK);
+
+                            // Cursor piscante
+                            if (((int)(GetTime() * 2) % 2) == 0)
+                            {
+                                float cursorX = campo.x + 10 + MeasureText(nomeBuffer, 20);
+                                DrawLine(cursorX, campo.y + 8, cursorX, campo.y + 32, BLACK);
+                            }
 
                         EndDrawing();
 
@@ -1782,47 +1902,45 @@ EstadoJogo LoopJogo()
 
                     // ----- Desenho da tela de fim (vitória/derrota) -----
                     BeginDrawing();
-                    ClearBackground(DARKGRAY);
 
-                    if (playerGanhou)
-                    {
-                        DrawText("VOCE VENCEU!", TELA_LARGURA/2 - MeasureText("VOCE VENCEU!", 50)/2,
-                                TELA_ALTURA/4 - 30, 50, GREEN);
+                        ClearBackground(DARKGRAY);
+
+                        if (playerGanhou)
+                        {
+                            DrawText("VOCE VENCEU!", TELA_LARGURA/2 - MeasureText("VOCE VENCEU!", 50)/2,
+                                    TELA_ALTURA/4 - 30, 50, GREEN);
+                        }
+                        else
+                        {
+                            DrawText("VOCE MORREU!", TELA_LARGURA/2 - MeasureText("VOCE MORREU!", 50)/2,
+                                    TELA_ALTURA/4 - 30, 50, RED);
+                        }
                         DrawText(TextFormat("Tempo total: %.2f segundos", player.score.tempoVivo),
-                                TELA_LARGURA/2 - 150, TELA_ALTURA/4 + 40, 20, LIGHTGRAY);
-                        DrawText(TextFormat("Ultima fase concluida: %d", player.score.faseCompletada),
-                                TELA_LARGURA/2 - 100, TELA_ALTURA/4 + 70, 20, LIGHTGRAY);
-                    }
-                    else
-                    {
-                        DrawText("VOCE MORREU!", TELA_LARGURA/2 - MeasureText("VOCE MORREU!", 50)/2,
-                                TELA_ALTURA/4 - 30, 50, RED);
-                        DrawText(TextFormat("Tempo total: %.2f segundos", player.score.tempoVivo),
-                                TELA_LARGURA/2 - 150, TELA_ALTURA/4 + 40, 20, LIGHTGRAY);
-                        DrawText(TextFormat("Ultima fase concluida: %d", player.score.faseCompletada),
-                                TELA_LARGURA/2 - 100, TELA_ALTURA/4 + 70, 20, LIGHTGRAY);
-                    }
+                                    TELA_LARGURA/2 - 150, TELA_ALTURA/4 + 40, 20, LIGHTGRAY);
+                            DrawText(TextFormat("Ultima fase concluida: %d", player.score.faseCompletada),
+                                    TELA_LARGURA/2 - 100, TELA_ALTURA/4 + 70, 20, LIGHTGRAY);
 
-                    // Mensagem adicional caso o score não tenha sido qualificado para salvar
-                    if (!podeSalvarScore && !modoSalvar && !nomeConfirmado && !nomeCancelado)
-                    {
-                        DrawText("Seu score nao foi alto o suficiente para entrar no placar.",
-                                TELA_LARGURA/2 - 200, TELA_ALTURA/2 - 120, 20, GRAY);
-                    }
+                        // Mensagem adicional caso o score não tenha sido qualificado para salvar
+                        if (!podeSalvarScore && !modoSalvar && !nomeConfirmado && !nomeCancelado)
+                        {
+                            DrawText("Seu score nao foi alto o suficiente para entrar no placar.",
+                                    TELA_LARGURA/2 - 200, TELA_ALTURA/2 - 120, 20, GRAY);
+                        }
 
-                    // Opções
-                    Color corJogar = (opcaoFim == 0) ? YELLOW : LIGHTGRAY;
-                    Color corMenu  = (opcaoFim == 1) ? YELLOW : LIGHTGRAY;
-                    Color corSair  = (opcaoFim == 2) ? YELLOW : LIGHTGRAY;
+                        // Opções do menu
 
-                    DrawText("Jogar Novamente", retJogarNovamente.x + 30, retJogarNovamente.y + 10, 25, corJogar);
-                    DrawText("Menu Principal",  retMenuFim.x + 30,        retMenuFim.y + 10,        25, corMenu);
-                    DrawText("Sair",            retSairFim.x + 100,       retSairFim.y + 10,        25, corSair);
+                        Color corJogar = (opcaoFim == 0) ? YELLOW : LIGHTGRAY;
+                        Color corMenu  = (opcaoFim == 1) ? YELLOW : LIGHTGRAY;
+                        Color corSair  = (opcaoFim == 2) ? YELLOW : LIGHTGRAY;
 
-                    // Contornos
-                    DrawRectangleLinesEx(retJogarNovamente, 1, LIGHTGRAY);
-                    DrawRectangleLinesEx(retMenuFim, 1, LIGHTGRAY);
-                    DrawRectangleLinesEx(retSairFim, 1, LIGHTGRAY);
+                        DrawText("Jogar Novamente", retJogarNovamente.x + 30, retJogarNovamente.y + 10, 25, corJogar);
+                        DrawText("Menu Principal",  retMenuFim.x + 30,        retMenuFim.y + 10,        25, corMenu);
+                        DrawText("Sair",            retSairFim.x + 100,       retSairFim.y + 10,        25, corSair);
+
+                        // Contornos
+                        DrawRectangleLinesEx(retJogarNovamente, 1, LIGHTGRAY);
+                        DrawRectangleLinesEx(retMenuFim, 1, LIGHTGRAY);
+                        DrawRectangleLinesEx(retSairFim, 1, LIGHTGRAY);
 
                     EndDrawing();
                 }
@@ -1837,7 +1955,7 @@ EstadoJogo LoopJogo()
                 {
                     switch (opcaoFim)
                     {
-                        case 0: // Jogar Novamente
+                        case 0: // Jogar Novamente, resetar tudo só pra garantir
                             player = GetPlayerPadrao();
                             inimigos = GetInimigosPadrao();
                             plataformas = GetPlataformasPadrao();
