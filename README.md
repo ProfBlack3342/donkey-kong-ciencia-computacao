@@ -13,13 +13,15 @@ Algoritmos e Programação - 2026/1
 - Melchior Neto
 
 ## Como compilar (VSCode)
+
+### VSCode
 <details>
 <summary>
 
-### Windows 
+#### Windows 
 </summary>
 
-#### Instalação do Compilador:
+##### Instalação do Compilador:
 1. Baixar e extrair a ultima versão de https://github.com/skeeto/w64devkit/releases em algum local de fácil acesso
 - (Uma dica é colocar em C:\Tools)
 2. Apertar as teclas "Win + R", digitar "sysdm.cpl" e apertar "Enter"
@@ -30,7 +32,7 @@ Algoritmos e Programação - 2026/1
 6. Apertar em "Ok" em todas as janelas até todas encerrarem
 - Se quiser testar a instalação, abra um terminal e digite "gcc --version"
 
-#### Configuração do Visual Studio Code:
+##### Configuração do Visual Studio Code:
 1. Abrir VSCode
 2. Instalar a extensão "C/C++ Extension Pack" da Microsoft
 3. Aperte as teclas "Ctrl + Shift + P", ache a opção "C/C++: Edit Configurations (UI)" e a selecione
@@ -38,7 +40,7 @@ Algoritmos e Programação - 2026/1
 - (Se ele foi extraido em "C:\Tools", o caminho será "C:\Tools\w64devkit\bin\gcc.exe")
 5. Ache a seção "IntelliSense mode" e altere para "windows-gcc-x64"
 
-#### Configuração do Raylib-Quickstart
+##### Configuração do Raylib-Quickstart
 1. Certifique-se que a pasta do projeto está em um caminho com pastas que não tenham espaço no nome
 2. Abra a pasta do projeto no VSCode
 3. Navegue na pasta .vscode e abra o arquivo tasks.json
@@ -55,7 +57,7 @@ Algoritmos e Programação - 2026/1
 <details>
 <summary>
 
-### Linux
+#### Linux
 </summary>
 
 1. Abrir a pasta do jogo no VSCode
