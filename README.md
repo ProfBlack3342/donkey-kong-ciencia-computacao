@@ -13,11 +13,10 @@ Algoritmos e Programação - 2026/1
 - Melchior Neto
 
 ## Como compilar (VSCode)
-
 <details>
 <summary>
 
-+ ### Windows 
+### Windows 
 </summary>
 
 #### Instalação do Compilador:
@@ -30,7 +29,6 @@ Algoritmos e Programação - 2026/1
 - (Se você extraiu em "C:\Tools", o caminho será "C:\Tools\w64devkit\bin")
 6. Apertar em "Ok" em todas as janelas até todas encerrarem
 - Se quiser testar a instalação, abra um terminal e digite "gcc --version"
-
 
 #### Configuração do Visual Studio Code:
 1. Abrir VSCode
@@ -57,7 +55,7 @@ Algoritmos e Programação - 2026/1
 <details>
 <summary>
 
-+ ### Linux
+### Linux
 </summary>
 
 1. Abrir a pasta do jogo no VSCode
