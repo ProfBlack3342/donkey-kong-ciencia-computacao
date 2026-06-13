@@ -1379,7 +1379,7 @@ EstadoJogo LoopScore()
             int yBase = 100;
             DrawText("Pos", 80, yBase, 25, YELLOW);
             DrawText("Nome", 160, yBase, 25, YELLOW);
-            DrawText("Fases", 400, yBase, 25, YELLOW);
+            DrawText("Fase", 400, yBase, 25, YELLOW);
             DrawText("Tempo (s)", 480, yBase, 25, YELLOW);
 
             // Linhas do placar
