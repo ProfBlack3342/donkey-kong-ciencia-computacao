@@ -15,8 +15,12 @@ Algoritmos e Programação - 2026/1
 ## Como compilar (VSCode)
 <details>
 
-<summary> ### Windows </summary>
+<summary>
+
+### Windows 
+</summary>
 <br>
+
 #### Instalação do Compilador:
 1. Baixar e extrair a ultima versão de https://github.com/skeeto/w64devkit/releases em algum local de fácil acesso
 - (Uma dica é colocar em C:\Tools)
@@ -27,7 +31,7 @@ Algoritmos e Programação - 2026/1
 - (Se você extraiu em "C:\Tools", o caminho será "C:\Tools\w64devkit\bin")
 6. Apertar em "Ok" em todas as janelas até todas encerrarem
 - Se quiser testar a instalação, abra um terminal e digite "gcc --version"
-</details>
+
 
 #### Configuração do Visual Studio Code:
 1. Abrir VSCode
@@ -49,6 +53,7 @@ Algoritmos e Programação - 2026/1
 8. Aperte F5 e espere o processo concluir
 9. Feche o jogo e copie/mova os arquivos dos mapas e scores para a pasta bin\Debug DENTRO DO PROJETO
 10. Aperte F5 novamente e aproveite o jogo!
+</details>
 
 ### Linux
 1. Abrir a pasta do jogo no VSCode
