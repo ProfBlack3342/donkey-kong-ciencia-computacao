@@ -13,8 +13,10 @@ Algoritmos e Programação - 2026/1
 - Melchior Neto
 
 ## Como compilar (VSCode)
+<details>
 
-### Windows
+<summary> ### Windows </summary>
+<br>
 #### Instalação do Compilador:
 1. Baixar e extrair a ultima versão de https://github.com/skeeto/w64devkit/releases em algum local de fácil acesso
 - (Uma dica é colocar em C:\Tools)
@@ -25,6 +27,7 @@ Algoritmos e Programação - 2026/1
 - (Se você extraiu em "C:\Tools", o caminho será "C:\Tools\w64devkit\bin")
 6. Apertar em "Ok" em todas as janelas até todas encerrarem
 - Se quiser testar a instalação, abra um terminal e digite "gcc --version"
+</details>
 
 #### Configuração do Visual Studio Code:
 1. Abrir VSCode
@@ -80,14 +83,14 @@ Leitura de inputs do Player, simulação de física e interações do Player e I
 ### Encerramento do Jogo
 Exibição da tela de vitória ou derrota, verificação do score do jogador e salvamento do mesmo se for melhor que o último dos scores salvos. Pode encerrar o loop do jogo ou retornar ao carregamento do mapa
 
-# Licenças
-Raylib-Quickstart por Jeffery Myers está marcada como CC0 1.0. Para ver uma cópia, visite https://creativecommons.org/publicdomain/zero/1.0/
-
-## 🤖 Assistência de IA
+# 🤖 Assistência de IA
 Partes da lógica de movimentação, física, colisões e estrutura do jogo foram desenvolvidas com o auxílio do **DeepSeek**, um assistente de IA, e posteriormente revisadas, corrigidas e adaptadas por um desenvolvedor humano para atender às necessidades específicas do projeto.
 
 Isso inclui as funções:
 - `AtualizarPlayer` – Física, pulo, colisões com plataformas/inimigos/escadas/portal
 - `AtualizarInimigos` – Patrulha, inversão de direção, colisões
 - `LoopJogo` – Desenho da tela e entrada do score
-- Algoritmo de ordenação (`TrocarScore`, `ParticionarPlacar`, `QuickSortPlacar` e `OrdenarPlacar`) para o placar
+- `TrocarScore`, `ParticionarPlacar`, `QuickSortPlacar` e `OrdenarPlacar` - Algoritmo de ordenação para o placar
+
+# Licenças
+Raylib-Quickstart por Jeffery Myers está marcada como CC0 1.0. Para ver uma cópia, visite https://creativecommons.org/publicdomain/zero/1.0/
