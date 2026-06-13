@@ -17,7 +17,7 @@ Algoritmos e Programação - 2026/1
 <details>
 <summary>
 
-### Windows 
++ ### Windows 
 </summary>
 
 #### Instalação do Compilador:
@@ -57,7 +57,7 @@ Algoritmos e Programação - 2026/1
 <details>
 <summary>
 
-### Linux
++ ### Linux
 </summary>
 
 1. Abrir a pasta do jogo no VSCode
