@@ -78,6 +78,18 @@ Algoritmos e Programação - 2026/1
 </details>
 
 # Descrição do Programa
+Este programa é a nossa tentativa de simular o jogo Donkey Kong, utilizando a linguagem C e a biblioteca RayLib.
+O código é separado nas seguintes partes:
++ Comentário inicial, com os requisitos mínimos do projeto
++ Chamamento de bibliotecas utilizadas durante o código, assim como comentários explicando o que fazem
++ Definições das constantes utilizadas durante o código, assim como comentários explicando o que fazem
++ Definições dos enumeradores, utilizados para definir as duas máquinas de estado presentes no código, assim como comentários explicando o que fazem
++ Definições das estruturas, utilizadas para representação do score, das posições de algum componente do mapa e de cada um destes componentes, assim como comentários explicando o que fazem
++ Declarações antecipadas das funções utilizadas no código, assim como comentários explicando o que fazem
++ Função main, ponto de partida da execução, e que define a máquina de estado principal do jogo
++ Definições das funções declaradas anteriormente
+
+# Fluxo de Execução
 O programa é dividido em 3 loops principais, que são controlados por uma máquina de estado presente no main:
 
 ## Loop do Menu
@@ -87,12 +99,16 @@ Um loop que exibe o menu principal. Possui 3 opções:
 - Sair - Encerra o Loop do Menu e sinaliza ao programa que ele pode encerrar a janela e encerrar
 
 ## Loop dos Scores
-Um loop que carrega e exibe os scores salvos em um arquivo binário. Possui somente um botão, que encerra o Loop dos Scores e retorna ao Loop do Menu. Os scores estão organizados pela lógica:
+Um loop que carrega e exibe os scores salvos em um arquivo binário.
+Apertar V encerra o Loop dos Scores e retorna ao Loop do Menu.
+Os scores estão organizados pela lógica:
 1. Maior Fase Alcançada
 2. Menor Tempo
 
 ## Loop do Jogo
-De longe a parte mais complexa do programa, possui uma máquina de estado interna que o divide em 3 grandes áreas:
+De longe a parte mais complexa do programa.
+Inicializa todas as estruturas presentes no mapa, assim como variáveis de controle internas.
+Possui uma máquina de estado interna que o divide em 3 grandes áreas:
 
 ### Carregamento do Mapa
 Carrega o mapa a partir do arquivo de texto correspondente e atribui a posição para cada struct. Depois, muda o estado interno para a execução do jogo.
@@ -102,6 +118,8 @@ Leitura de inputs do Player, simulação de física e interações do Player e I
 
 ### Encerramento do Jogo
 Exibição da tela de vitória ou derrota, verificação do score do jogador e salvamento do mesmo se for melhor que o último dos scores salvos. Pode encerrar o loop do jogo ou retornar ao carregamento do mapa
+
+<br>
 
 # 🤖 Assistência de IA
 Partes da lógica de movimentação, física, colisões e estrutura do jogo foram desenvolvidas com o auxílio do **DeepSeek**, um assistente de IA, e posteriormente revisadas, corrigidas e adaptadas por um desenvolvedor humano para atender às necessidades específicas do projeto.
