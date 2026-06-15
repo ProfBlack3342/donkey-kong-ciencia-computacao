@@ -1,0 +1,105 @@
+Relatório do Trabalho Final de Algoritmos e Programação – 2026/1
+
+- Título: Donkey Kong em C com Raylib
+
+- Autores: Ariel Nathan Scheffer de Souza, Eduardo Pereira Moreira
+
+- Professores: Prof. Dr. Eder John Scheid, Profa. Dra. Luciana Bencke
+
+- Monitores: Augusto Sturm, Melchior Neto
+
+
+- Descrição do Trabalho Realizado
+O objetivo foi implementar uma versão simplificada do jogo Donkey Kong utilizando a linguagem C e a biblioteca gráfica Raylib. O programa carrega mapas de arquivos texto, gerencia múltiplas fases, controla movimentação do jogador e inimigos com física (gravidade) e colisões, e mantém um sistema de placar (high scores) salvo em arquivo binário. Possui um menu principal com opções de Novo Jogo, Ranking e Sair, suporte a pausa e interações com escadas (teletransporte) e portal (conclusão de fase). A interface gráfica usa formas geométricas coloridas.
+
+
+- Representação dos Elementos do Jogo
+Cada entidade é representada por uma estrutura (struct) com posição (x,y), dimensões (altura, comprimento), cor e propriedades específicas.
+
+	Player: struct_player
+	Movimenta-se, pula e interage com escadas/portal.
+
+	Inimigos: struct_inimigos
+	Patrulham plataformas e invertem direção em bordas ou paredes.
+
+	Plataformas: struct_plataforma
+	Blocos sólidos que formam o chão e paredes.
+
+	Escadas: struct_escada_baixo, struct_escada_meio, struct_escada_cima
+	Permitem teletransporte vertical entre partes conectadas.
+
+	Portal: struct_portal (posição, altura 40px, comprimento 30px, cor PURPLE).
+	Avança de fase ao ser tocado.
+
+	Mapa: matriz bidimensional de caracteres (30x30), lida de arquivos texto (mapaX.txt).
+	Cada caractere mapeia um elemento: 'P' player, 'E' inimigo, 'Z' plataforma, 'S' escada baixo, 'D' escada cima, 'H' escada meio, 'F' portal.
+
+
+- Interação dos Componentes
+
+	Movimentação do jogador:
+	Setas esquerda/direita movem horizontalmente com colisão;
+	Espaço pula apenas quando os pés estão sobre uma plataforma (função PontoSobrePlataforma).
+	Gravidade constante puxa o personagem para baixo
+
+	Colisões com plataformas:
+	Retângulos (Raylib CheckCollisionRecs) impedem atravessar paredes e garantem pouso sobre plataformas e batida de cabeça em tetos
+
+	Escadas:
+	Ao colidir com a parte de baixo e pressionar ↑, o jogador é teleportado para o topo da mesma escada;
+	O inverso ocorre com ↓ no topo
+
+	Portal:
+	Ao colidir, a flag concluiuFase é ativada, o tempo da fase é acumulado e a próxima fase carrega;
+	Se exceder MAPA_MAX, o jogador vence
+
+	Inimigos:
+	Movem-se horizontalmente;
+	Invertem direção ao detectar falta de plataforma à frente (borda) ou ao colidir com parede.
+	Colisão com o jogador causa morte
+
+	Fases e placar:
+	Ao vencer ou morrer, o score (tempo total e maior fase) é comparado com o último do placar;
+	Se melhor ou igual, permite digitar o nome.
+	O array de scores é ordenado via QuickSort (ordem decrescente por fase, depois menor tempo) e salvo em placar.bin.
+
+
+- Estruturas e Funções Utilizadas
+
+	Estruturas:
+		Score
+		Posicao
+		Player
+		Inimigo
+		Inimigos
+		Plataforma
+		Plataformas
+		EscadaBaixo
+		EscadaMeio
+		EscadaCima
+		Escadas
+		Portal
+
+
+	Funções principais:
+		Inicialização: GetPlayerPadrao(), GetInimigosPadrao(), etc..., fornecem structs com valores padrão.
+		Carregamento: CarregarMapa() lê arquivo e transpõe para matriz coluna×linha; MatrizParaStructs() preenche as structs a partir da matriz.
+		Física/Colisões: AtualizarPlayer() e AtualizarInimigos() implementam movimento, gravidade, pulo, colisões com plataformas, escadas e portal, usando PontoSobrePlataforma() para verificar chão.
+		Placar: DevolverMaiorScore() (critério de ordenação), QuickSortPlacar(), OrdenarPlacar(), CarregarPlacar() e SalvarPlacar() manipulam o arquivo binário.
+		Telas: LoopMenu(), LoopScore(), LoopJogo() gerenciam os estados via máquina de estados.
+
+
+- Como Usar o Programa
+
+	Compilação: compile com gcc (ou similar) vinculando a Raylib. Os arquivos de mapa (mapa0.txt, etc.) devem estar na pasta do executável.
+
+
+- Execução:
+
+	O menu principal oferece Iniciar Jogo (setas e Enter/ clique), Scores (ranking) e Sair.
+
+	No jogo: mova com ← →, pule com Espaço, pause com P. Use ↑ na base da escada e ↓ no topo. Toque o portal roxo para avançar. Evite os inimigos azuis.
+
+	Ranking: pressione V para voltar ao menu.
+
+	Fim de jogo: digite o nome (Enter confirma, ESC cancela) se qualificado; depois escolha Jogar Novamente, Menu ou Sair.
