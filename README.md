@@ -6,7 +6,7 @@ Algoritmos e Programação - 2026/1
 - Ariel Nathan Scheffer de Souza
 - Eduardo Pereira Moreira
 
-### Professores e Monitores
+### Professores
 - Prof. Dr. Eder John Scheid
 - Profa. Dra. Luciana Bencke
 
