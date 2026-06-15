@@ -10,17 +10,18 @@ Relatório do Trabalho Final de Algoritmos e Programação – 2026/1
 
 
 - Conteúdo do .zip aonde se encontra este arquivo:
-	/...
-	   /donkey-kong-ciencia-computacao.exe - Arquivo executável para Windows
-	   /donkey-kong-ciencia-computacao - Arquivo executável para Linux
-	   /main.c - Arquivo contendo o código fonte em C do programa
-	   /mapa0.txt - Arquivo de texto contendo o mapa 0 do jogo
-	   /mapa1.txt - Arquivo de texto contendo o mapa 1 do jogo
-	   /mapa2.txt - Arquivo de texto contendo o mapa 2 do jogo
-	   /mapa3.txt - Arquivo de texto contendo o mapa 3 do jogo
-	   /mapa4.txt - Arquivo de texto contendo o mapa 4 do jogo
-	   /raylib.lib - Arquivo contendo a biblioteca RayLib
-	   /relatorio.txt - Este arquivo, contendo um relatório breve sobre o trabalho
+
+	donkey-kong-ciencia-computacao/
+	├── executavel-linux				# Arquivo executável para Linux
+	├── executavel-windows.exe			# Arquivo executável para Windows
+	├── main.c					# Arquivo contendo o código fonte em C do programa
+	├── mapa0.txt					# Arquivo de texto contendo o mapa 0 do jogo
+	├── mapa1.txt					# Arquivo de texto contendo o mapa 1 do jogo
+	├── mapa2.txt					# Arquivo de texto contendo o mapa 2 do jogo
+	├── mapa3.txt					# Arquivo de texto contendo o mapa 3 do jogo
+	├── mapa4.txt					# Arquivo de texto contendo o mapa 4 do jogo
+	├── raylib.lib					# Arquivo contendo a biblioteca RayLib
+	└── relatorio.txt				# Este arquivo, contendo um relatório breve sobre o trabalho
 
 
 - Descrição do Trabalho Realizado
