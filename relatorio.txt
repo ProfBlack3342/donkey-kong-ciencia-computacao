@@ -11,7 +11,7 @@ Relatório do Trabalho Final de Algoritmos e Programação – 2026/1
 
 - Conteúdo do .zip aonde se encontra este arquivo:
 
-	donkey-kong-ciencia-computacao/
+	donkey-kong-ciencia-computacao.zip/
 	├── executavel-linux				# Arquivo executável para Linux
 	├── executavel-windows.exe			# Arquivo executável para Windows
 	├── main.c					# Arquivo contendo o código fonte em C do programa
