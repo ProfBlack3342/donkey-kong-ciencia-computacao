@@ -1,0 +1,27 @@
+Z                            Z
+Z      D  F    E             Z
+Z      ZZZZZZZZZZZ           Z
+Z      H                     Z
+Z      S                D    Z
+ZZZZZZZZZZZZZ   ZZZZZZZZZZZZZZ
+Z                       H    Z
+Z       D    E        D S    Z
+ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+Z       H             H      Z
+Z       S     D       S      Z
+Z      ZZZZZZZZZZZZZZZZZZ    Z
+Z             H              Z
+Z      D   E  S        D     Z
+Z     ZZZZZZZZZZZ  ZZZZZZZZ  Z
+Z      H               H     Z
+ZD     S      E        S   D Z
+ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+ZH                         H Z
+ZS                   D     S Z
+ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+Z                    H       Z
+ZD                   S  E    Z
+ZZZZZZZZZZZZZ   ZZZZZZZZZZZZZZ
+ZH                           Z
+ZS   P                       Z
+ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
