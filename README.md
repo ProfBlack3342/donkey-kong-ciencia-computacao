@@ -9,8 +9,31 @@ Algoritmos e Programação - 2026/1
 ### Professores e Monitores
 - Prof. Dr. Eder John Scheid
 - Profa. Dra. Luciana Bencke
+
+### Monitores
 - Augusto Sturm
 - Melchior Neto
+
+## Como executar
+<details>
+<summary>
+
+#### Windows 
+</summary>
+
+1. Baixar e descompactar o arquivo "jogo-windows.zip" em releases
+2. Abra o arquivo .exe
+</details>
+
+<details>
+<summary>
+
+#### Linux 
+</summary>
+
+1. Baixar e descompactar o arquivo "jogo-linux.zip" em releases
+2. Abra o terminal na pasta e digite `./nome-do-executavel`
+</details>
 
 ## Como compilar
 
