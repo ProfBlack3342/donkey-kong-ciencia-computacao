@@ -9,6 +9,26 @@ Relatório do Trabalho Final de Algoritmos e Programação – 2026/1
 - Monitores: Augusto Sturm, Melchior Neto
 
 
+- Conteúdo do .zip aonde se encontra este arquivo:
+	...
+	   /executavel-windows
+	   					/.exe - 
+						/.lib - 
+						/mapa0.txt - 
+						/mapa1.txt - 
+						/mapa2.txt - 
+						/mapa3.txt - 
+	   /executavel-linux
+						/.
+						/.
+						/mapa0.txt - 
+						/mapa1.txt - 
+						/mapa2.txt - 
+						/mapa3.txt - 
+	   /codigo.c - Arquivo contendo o código fonte do programa
+	   /relatorio.txt - Este arquivo, contendo um relatório breve sobre o trabalho
+
+
 - Descrição do Trabalho Realizado
 O objetivo foi implementar uma versão simplificada do jogo Donkey Kong utilizando a linguagem C e a biblioteca gráfica Raylib. O programa carrega mapas de arquivos texto, gerencia múltiplas fases, controla movimentação do jogador e inimigos com física (gravidade) e colisões, e mantém um sistema de placar (high scores) salvo em arquivo binário. Possui um menu principal com opções de Novo Jogo, Ranking e Sair, suporte a pausa e interações com escadas (teletransporte) e portal (conclusão de fase). A interface gráfica usa formas geométricas coloridas.
 
