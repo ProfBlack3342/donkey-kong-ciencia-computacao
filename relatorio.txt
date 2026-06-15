@@ -11,22 +11,15 @@ Relatório do Trabalho Final de Algoritmos e Programação – 2026/1
 
 - Conteúdo do .zip aonde se encontra este arquivo:
 	...
-	   /executavel-windows
-	   					/.exe - 
-						/.lib - 
-						/mapa0.txt - 
-						/mapa1.txt - 
-						/mapa2.txt - 
-						/mapa3.txt - 
-	   /executavel-linux
-						/.
-						/.
-						/mapa0.txt - 
-						/mapa1.txt - 
-						/mapa2.txt - 
-						/mapa3.txt - 
-	   /codigo.c - Arquivo contendo o código fonte do programa
-	   /relatorio.txt - Este arquivo, contendo um relatório breve sobre o trabalho
+		/codigo.c - Arquivo contendo o código fonte em C do programa
+		/executavel-windows.exe - Arquivo executável para Windows
+		/executavel-linux - Arquivo executável para Linux
+		/mapa0.txt - Arquivo de texto contendo o mapa 0 do jogo
+		/mapa1.txt - Arquivo de texto contendo o mapa 1 do jogo
+		/mapa2.txt - Arquivo de texto contendo o mapa 2 do jogo
+		/mapa3.txt - Arquivo de texto contendo o mapa 3 do jogo
+	    /raylib.lib - Arquivo contendo a biblioteca RayLib
+	    /relatorio.txt - Este arquivo, contendo um relatório breve sobre o trabalho
 
 
 - Descrição do Trabalho Realizado
@@ -101,15 +94,37 @@ Cada entidade é representada por uma estrutura (struct) com posição (x,y), di
 		Portal
 
 
-	Funções principais:
-		Inicialização: GetPlayerPadrao(), GetInimigosPadrao(), etc..., fornecem structs com valores padrão.
-		Carregamento: CarregarMapa() lê arquivo e transpõe para matriz coluna×linha; MatrizParaStructs() preenche as structs a partir da matriz.
-		Física/Colisões: AtualizarPlayer() e AtualizarInimigos() implementam movimento, gravidade, pulo, colisões com plataformas, escadas e portal, usando PontoSobrePlataforma() para verificar chão.
-		Placar: DevolverMaiorScore() (critério de ordenação), QuickSortPlacar(), OrdenarPlacar(), CarregarPlacar() e SalvarPlacar() manipulam o arquivo binário.
-		Telas: LoopMenu(), LoopScore(), LoopJogo() gerenciam os estados via máquina de estados.
+	Funções:
+
+		- GetPlayerPadrao(), GetInimigosPadrao(), etc...
+		Fornecem structs com valores padrão
+
+		- DevolverMaiorScore()
+		Compara e retorna qual score é maior
+
+		- TrocarScore(), ParticionarPlacar(), QuickSortPlacar() e OrdenarPlacar
+		Ordenam um array de scores pelos critérios em DevolverMaiorScore(), de maior a menor
+
+		- CarregarPlacar() e SalvarPlacar()
+		Manipulam o arquivo binário.
+
+		- CarregarMapa()
+		Lê arquivo e transpõe para um array bidimensional
+
+		- MatrizParaStructs()
+		Preenche as structs a partir do array anterior
+
+		- PontoSobrePlataforma(), AtualizarPlayer() e AtualizarInimigos()
+		Movimento, gravidade, pulo, colisões com plataformas, escadas e portal do Player e Inimigos
+		
+		LoopMenu(), LoopScore(), LoopJogo()
+		Controlam a lógica e desenham as diferentes partes do jogo
+
+		main()
+		Inicializa e executa a máquina de estados principal
 
 
-- Como Usar o Programa
+- Como Usar o Programa:
 
 	Compilação: compile com gcc (ou similar) vinculando a Raylib. Os arquivos de mapa (mapa0.txt, etc.) devem estar na pasta do executável.
 
