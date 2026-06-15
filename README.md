@@ -39,6 +39,11 @@ Algoritmos e Programação - 2026/1
 
 ### Terminal
 
+#### Windows
+1. Compile o código fonte com gcc ou simular, vinculando a Raylib
+2. Certifique-se que os arquivos de mapa estão na mesma localização do executável gerado
+3. Abra o arquivo .exe gerado
+
 #### Linux
 1. Instale o pacote "gcc" do repositório da sua distribuição (se ele já não estiver instalado)
 2. Abra um terminal, e navegue até o local do código-fonte
