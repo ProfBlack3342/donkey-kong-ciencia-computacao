@@ -21,8 +21,8 @@ Algoritmos e Programação - 2026/1
 #### Windows 
 </summary>
 
-1. Baixar e descompactar o arquivo "jogo-windows.zip" em releases
-2. Abra o arquivo .exe
+1. Baixar e descompactar a ultima release
+2. Abra o arquivo `executavel-windows.exe`
 </details>
 
 <details>
@@ -31,8 +31,8 @@ Algoritmos e Programação - 2026/1
 #### Linux 
 </summary>
 
-1. Baixar e descompactar o arquivo "jogo-linux.zip" em releases
-2. Abra o terminal na pasta e digite `./nome-do-executavel`
+1. Baixar e descompactar a ultima release
+2. Abra o terminal na pasta e digite `./executavel-linux`
 </details>
 
 ## Como compilar
