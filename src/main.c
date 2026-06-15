@@ -1829,7 +1829,7 @@ EstadoJogo LoopJogo()
                         }
 
                         // Escape – cancela o salvamento
-                        if (IsKeyPressed(KEY_ESCAPE))
+                        if (IsKeyPressed(KEY_DELETE))
                         {
                             nomeCancelado = true;
                             modoSalvar = false;
@@ -1843,7 +1843,7 @@ EstadoJogo LoopJogo()
 
                             DrawText("DIGITE SEU NOME", TELA_LARGURA/2 - MeasureText("DIGITE SEU NOME", 30)/2,
                                     TELA_ALTURA/4 - 60, 30, WHITE);
-                            DrawText("(Enter para salvar, ESC para pular)", TELA_LARGURA/2 - MeasureText("(Enter para salvar, ESC para pular)", 20)/2,
+                            DrawText("(Enter para salvar, Delete para pular)", TELA_LARGURA/2 - MeasureText("(Enter para salvar, ESC para pular)", 20)/2,
                                     TELA_ALTURA/4 - 30, 20, LIGHTGRAY);
 
                             // Retângulo do campo de texto
