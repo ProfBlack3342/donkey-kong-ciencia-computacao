@@ -37,7 +37,7 @@ Algoritmos e Programação - 2026/1
 
 ## Como compilar
 
-### Terminal
+### Código Fonte no Terminal (Arquivo .c)
 
 #### Windows
 1. Compile o código fonte com gcc ou simular, vinculando a Raylib
@@ -51,7 +51,7 @@ Algoritmos e Programação - 2026/1
 4. Certifique-se que os arquivos de mapa estão na mesma localização do executável gerado
 5. Execute no terminal `./nome-do-executavel-que-sera-gerado` ou duplo clique pelo seu navegador de arquivos
 
-### VSCode
+### Projeto no VSCode (Projeto do GitHub)
 <details>
 <summary>
 
