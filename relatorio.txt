@@ -30,23 +30,29 @@ O objetivo foi implementar uma versão simplificada do jogo Donkey Kong utilizan
 
 - Representação dos Elementos do Jogo
 Cada entidade é representada por uma estrutura (struct) com posição (x,y), dimensões (altura, comprimento), cor e propriedades específicas.
+	
+	Score: struct_score
+	Guarda a pontuação de um jogador, com nome, tempo vivo e ultima fase concluída
 
+	Posição: struct_posicao
+	Guarda a posição de um dos outros elementos do jogo
+	
 	Player: struct_player
 	Movimenta-se, pula e interage com escadas/portal.
 
-	Inimigos: struct_inimigos
+	Inimigos: struct_inimigo, struct_inimigos
 	Patrulham plataformas e invertem direção em bordas ou paredes.
 
-	Plataformas: struct_plataforma
+	Plataformas: struct_plataforma, struct_plataformas
 	Blocos sólidos que formam o chão e paredes.
 
-	Escadas: struct_escada_baixo, struct_escada_meio, struct_escada_cima
+	Escadas: struct_escada_baixo, struct_escada_meio, struct_escada_cima, struct_escada
 	Permitem teletransporte vertical entre partes conectadas.
 
-	Portal: struct_portal (posição, altura 40px, comprimento 30px, cor PURPLE).
+	Portal: struct_portal
 	Avança de fase ao ser tocado.
 
-	Mapa: matriz bidimensional de caracteres (30x30), lida de arquivos texto (mapaX.txt).
+	Mapa: matriz bidimensional de caracteres, lida de arquivos texto (mapaX.txt).
 	Cada caractere mapeia um elemento: 'P' player, 'E' inimigo, 'Z' plataforma, 'S' escada baixo, 'D' escada cima, 'H' escada meio, 'F' portal.
 
 
@@ -139,4 +145,4 @@ Cada entidade é representada por uma estrutura (struct) com posição (x,y), di
 
 	Ranking: pressione V para voltar ao menu.
 
-	Fim de jogo: digite o nome (Enter confirma, ESC cancela) se qualificado; depois escolha Jogar Novamente, Menu ou Sair.
+	Fim de jogo: digite o nome (Enter confirma, Delete cancela) se qualificado; depois escolha Jogar Novamente, Menu ou Sair.
